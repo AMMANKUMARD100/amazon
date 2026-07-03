@@ -5,7 +5,7 @@ CampusMate AI is a production-ready, fully modular, secure, and offline **Intell
 This application is designed to run **100% offline** with **zero external API dependencies** (no OpenAI, Gemini, or Claude keys required). All intelligent planning, advisories, search patterns, and reminders are driven by offline rule-based heuristics, decision trees, and local text index engines.
 
 ---
-
+<img width="1880" height="836" alt="Image" src="https://github.com/user-attachments/assets/63de1595-a3b7-4b75-8652-43ecd65b25f6" />
 ## 🚀 Key Capstone Architecture Concepts
 
 ### 1. Multi-Agent System (Google ADK Style)
