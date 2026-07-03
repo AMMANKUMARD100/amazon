@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.db-journal
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.eslintcache
+
+# IDEs & System
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

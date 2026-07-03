@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - FLASK_ENV=development
+      - DATABASE_PATH=backend/database/campusmate.db
+    volumes:
+      - ./backend/database:/app/backend/database
+      - ./backend/logs:/app/backend/logs
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_PORT=3000
+    depends_on:
+      - backend

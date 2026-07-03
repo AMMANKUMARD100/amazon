@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "question": "How do I contact the Academic Advisor?",
+    "answer": "You can email advising@campus.edu or visit Room 302 in the Administration Block during walk-in hours (Mon-Wed 2-4 PM).",
+    "category": "Advising"
+  },
+  {
+    "id": 2,
+    "question": "Where is the Central Library located?",
+    "answer": "The Central Library is located in Block C, opposite the Student Union Building. It is open 24/7 during exam weeks.",
+    "category": "Facilities"
+  },
+  {
+    "id": 3,
+    "question": "What is the attendance policy?",
+    "answer": "Students must maintain at least 75% attendance in each subject to be eligible to sit for the final semester examinations.",
+    "category": "Policy"
+  },
+  {
+    "id": 4,
+    "question": "How can I request an official transcript?",
+    "answer": "Official transcript requests can be submitted online via the Student Portal under academic records. Standard processing takes 3-5 business days.",
+    "category": "Records"
+  },
+  {
+    "id": 5,
+    "question": "What should I do if I miss an exam due to illness?",
+    "answer": "You must submit a valid Medical Certificate (MC) to the Faculty Office within 48 hours of the missed exam. A make-up exam or waiver may be approved.",
+    "category": "Policy"
+  },
+  {
+    "id": 6,
+    "question": "Where can I find the IT Helpdesk?",
+    "answer": "The IT Helpdesk is located on the Ground Floor of Block D, inside the Main Computer Lab. You can also log support tickets at support.campus.edu.",
+    "category": "IT Support"
+  },
+  {
+    "id": 7,
+    "question": "What are the semester credit limits?",
+    "answer": "The standard load is 15-18 credits per semester. Overloads up to 21 credits require a CGPA of 3.5 or above and Advisor approval.",
+    "category": "Policy"
+  }
+]
