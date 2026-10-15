@@ -56,7 +56,9 @@ class DashboardAgent(BaseAgent):
                 "overall_attendance": summary.get("overall_attendance"),
                 "pending_assignments": summary.get("pending_assignments"),
                 "completed_assignments": summary.get("completed_assignments"),
-                "scheduled_study_hours": summary.get("scheduled_study_hours")
+                "scheduled_study_hours": summary.get("scheduled_study_hours"),
+                "upcoming_exams_count": summary.get("upcoming_exams_count", 0),
+                "upcoming_exams": summary.get("upcoming_exams", [])
             },
             "charts": {
                 "attendance": {

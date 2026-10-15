@@ -49,6 +49,17 @@ def get_dashboard_summary(student_id):
         (student_id,), fetch_one=True
     )
 
+    # 5. Upcoming exams
+    exam_rows = execute_query(
+        """SELECT e.id, e.title, e.exam_date, COALESCE(s.code, 'GEN') as code
+           FROM exams e
+           LEFT JOIN subjects s ON e.subject_id = s.id
+           WHERE e.student_id = ?
+           ORDER BY e.exam_date ASC;""",
+        (student_id,), fetch_all=True
+    )
+    upcoming_exams = [dict(r) for r in exam_rows]
+
     return {
         "student_name": student_profile['full_name'] if student_profile else "Student",
         "matric_number": student_profile['matric_number'] if student_profile else "",
@@ -56,5 +67,7 @@ def get_dashboard_summary(student_id):
         "pending_assignments": pending_assignments,
         "completed_assignments": completed_assignments,
         "overall_attendance": overall_attendance,
-        "scheduled_study_hours": study_hours
+        "scheduled_study_hours": study_hours,
+        "upcoming_exams_count": len(upcoming_exams),
+        "upcoming_exams": upcoming_exams
     }

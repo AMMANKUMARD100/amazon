@@ -267,10 +267,12 @@ const Dashboard = () => {
           <div>
             <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block">Upcoming Exams</span>
             <span className="text-2xl font-extrabold text-slate-800 dark:text-white mt-1 block">
-              2 Scheduled
+              {metrics?.upcoming_exams_count || 0} Scheduled
             </span>
-            <span className="text-[10px] font-medium text-slate-400 mt-1 block">
-              CS101, MAT201 in Nov
+            <span className="text-[10px] font-medium text-slate-400 mt-1 block truncate max-w-[140px]">
+              {metrics?.upcoming_exams && metrics.upcoming_exams.length > 0
+                ? metrics.upcoming_exams.map(e => `${e.code || 'GEN'} (${e.exam_date})`).slice(0, 2).join(', ')
+                : 'No upcoming exams'}
             </span>
           </div>
           <div className="p-3 bg-cyan-500/10 text-cyan-500 rounded-xl">
