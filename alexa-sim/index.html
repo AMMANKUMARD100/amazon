@@ -1400,7 +1400,7 @@
 
         <div class="form-group">
           <label class="form-label" for="cfgAuthToken">MCP Bearer Auth Token</label>
-          <input type="password" class="form-input" id="cfgAuthToken" value="campusmate-dev-token-xyz" />
+          <input type="password" class="form-input" id="cfgAuthToken" value="dev_mcp_secret_token_12345" />
         </div>
 
         <div class="form-group">
@@ -1443,12 +1443,13 @@
     const CONFIG = {
       apiUrl: localStorage.getItem('cm_api_url') || 'http://localhost:5000',
       mcpUrl: localStorage.getItem('cm_mcp_url') || 'http://localhost:8080/mcp',
-      authToken: localStorage.getItem('cm_auth_token') || 'campusmate-dev-token-xyz',
+      authToken: localStorage.getItem('cm_auth_token') || 'dev_mcp_secret_token_12345',
       studentId: parseInt(localStorage.getItem('cm_student_id') || '1', 10),
       speechEnabled: localStorage.getItem('cm_speech_enabled') !== 'false',
       executionMode: localStorage.getItem('cm_exec_mode') || 'flask_rest', // 'flask_rest' or 'mcp_direct'
       selectedVoiceUri: localStorage.getItem('cm_selected_voice') || ''
     };
+
 
     // Application state
     let recognition = null;
@@ -2347,16 +2348,99 @@
      * UNIVERSAL MCP TOOL DISPATCHER (FLASK REST / DIRECT MCP / MOCK)
      * ------------------------------------------------------------- */
 
+    // Stored MCP session ID across calls
+    let mcpSessionId = null;
+    let mcpInitialized = false;
+
+    async function ensureMcpHandshake() {
+      if (mcpInitialized && mcpSessionId) return;
+
+      const initPayload = {
+        jsonrpc: '2.0',
+        id: ++toolCallCount,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: {
+            name: 'CampusMate-Alexa-Sim',
+            version: '1.0.0'
+          }
+        }
+      };
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/event-stream'
+      };
+      if (CONFIG.authToken) {
+        headers['Authorization'] = `Bearer ${CONFIG.authToken}`;
+      }
+
+      const res = await fetch(CONFIG.mcpUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(initPayload)
+      });
+
+      if (!res.ok) {
+        throw new Error(`MCP handshake initialize failed with HTTP ${res.status}`);
+      }
+
+      // Check for Mcp-Session-Id header
+      const sid = res.headers.get('Mcp-Session-Id');
+      if (sid) {
+        mcpSessionId = sid;
+      }
+
+      // Read response body (could be JSON or SSE)
+      const cType = res.headers.get('content-type') || '';
+      if (cType.includes('text/event-stream')) {
+        await res.text();
+      } else {
+        await res.json();
+      }
+
+      // Send notifications/initialized notification
+      const notifyHeaders = {
+        'Content-Type': 'application/json'
+      };
+      if (CONFIG.authToken) {
+        notifyHeaders['Authorization'] = `Bearer ${CONFIG.authToken}`;
+      }
+      if (mcpSessionId) {
+        notifyHeaders['Mcp-Session-Id'] = mcpSessionId;
+      }
+
+      try {
+        await fetch(CONFIG.mcpUrl, {
+          method: 'POST',
+          headers: notifyHeaders,
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'notifications/initialized'
+          })
+        });
+      } catch (e) {
+        // notification may not return or be fire-and-forget
+      }
+
+      mcpInitialized = true;
+    }
+
     async function invokeToolDispatcher(toolName, args, options) {
       const startTime = performance.now();
       let responseData = null;
       let error = null;
       let transportUsed = 'Flask REST';
+      let isMockFallback = false;
 
       try {
         if (CONFIG.executionMode === 'mcp_direct') {
-          // Direct MCP Streamable HTTP JSON-RPC Call
+          // Direct MCP Streamable HTTP JSON-RPC Call with full handshake & session reuse
           transportUsed = 'MCP Streamable HTTP';
+          await ensureMcpHandshake();
+
           const rpcPayload = {
             jsonrpc: '2.0',
             id: ++toolCallCount,
@@ -2367,20 +2451,51 @@
             }
           };
 
+          const mcpHeaders = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/event-stream'
+          };
+          if (CONFIG.authToken) {
+            mcpHeaders['Authorization'] = `Bearer ${CONFIG.authToken}`;
+          }
+          if (mcpSessionId) {
+            mcpHeaders['Mcp-Session-Id'] = mcpSessionId;
+          }
+
           const mcpResponse = await fetch(CONFIG.mcpUrl, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${CONFIG.authToken}`
-            },
+            headers: mcpHeaders,
             body: JSON.stringify(rpcPayload)
           });
 
           if (!mcpResponse.ok) {
             throw new Error(`MCP Server returned HTTP ${mcpResponse.status}`);
           }
-          const jsonRpcRes = await mcpResponse.json();
-          responseData = jsonRpcRes.result ? (jsonRpcRes.result.content || jsonRpcRes.result) : jsonRpcRes;
+
+          // Parse both JSON and SSE responses
+          const resContentType = mcpResponse.headers.get('content-type') || '';
+          if (resContentType.includes('text/event-stream')) {
+            const sseText = await mcpResponse.text();
+            // Parse event data from SSE format: 'data: {...}'
+            const lines = sseText.split('\n');
+            let parsed = null;
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                try {
+                  parsed = JSON.parse(line.substring(5).trim());
+                  break;
+                } catch (e) {}
+              }
+            }
+            if (parsed && parsed.result) {
+              responseData = parsed.result.content || parsed.result;
+            } else {
+              responseData = parsed || sseText;
+            }
+          } else {
+            const jsonRpcRes = await mcpResponse.json();
+            responseData = jsonRpcRes.result ? (jsonRpcRes.result.content || jsonRpcRes.result) : jsonRpcRes;
+          }
         } else {
           // Default: Flask REST API endpoint
           transportUsed = 'Flask REST API';
@@ -2408,7 +2523,29 @@
         // Fallback to high-fidelity mock data matching seeded Alex Mercer database
         responseData = generateMockFallback(toolName, args);
         transportUsed += ' (Simulated Offline)';
+        isMockFallback = true;
+        // Invalidate handshake state on error so next call can retry
+        mcpInitialized = false;
+        mcpSessionId = null;
       }
+
+      // Update backendStatusBadge in UI to clearly distinguish live vs mock fallback
+      if (backendStatusBadge && backendStatusText) {
+        if (isMockFallback) {
+          backendStatusBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+          backendStatusBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+          backendStatusText.innerHTML = '<span style="color: #f87171; font-weight: 600;">Mock Data (server unreachable)</span>';
+        } else if (CONFIG.executionMode === 'mcp_direct') {
+          backendStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+          backendStatusBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+          backendStatusText.innerHTML = '<span style="color: #34d399; font-weight: 600;">Live MCP Streamable HTTP (:8080)</span>';
+        } else {
+          backendStatusBadge.style.borderColor = 'rgba(14, 165, 233, 0.4)';
+          backendStatusBadge.style.background = 'rgba(14, 165, 233, 0.15)';
+          backendStatusText.innerHTML = '<span style="color: #38bdf8; font-weight: 600;">Flask REST Connected (:5000)</span>';
+        }
+      }
+
 
       const elapsedMs = Math.round(performance.now() - startTime);
 

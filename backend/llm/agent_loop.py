@@ -122,10 +122,24 @@ class AgentLoop:
                 "content": assistant_content
             })
 
-            # 2. Execute each tool via tool_registry and collect toolResult blocks
+            # 2. Execute each tool via tool_registry (or optionally via MCP client if USE_MCP_CLIENT=true)
+            use_mcp_client = os.environ.get("USE_MCP_CLIENT", "").lower() in ("true", "1", "yes")
             tool_results_content: List[Dict[str, Any]] = []
             for tc in response.tool_calls:
-                exec_res = execute_tool(tc.name, self.student_id, tc.input)
+                exec_res = None
+                if use_mcp_client:
+                    try:
+                        from backend.mcp_client import mcp_client
+                        tool_args = dict(tc.input or {})
+                        tool_args["student_id"] = self.student_id
+                        raw_mcp_res = mcp_client.call_tool(tc.name, tool_args)
+                        exec_res = {"success": True, "result": raw_mcp_res}
+                    except Exception as mcp_err:
+                        # Fallback to direct service execution
+                        exec_res = execute_tool(tc.name, self.student_id, tc.input)
+                else:
+                    exec_res = execute_tool(tc.name, self.student_id, tc.input)
+
                 executed_calls.append({
                     "tool_name": tc.name,
                     "input": tc.input,

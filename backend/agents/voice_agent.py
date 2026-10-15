@@ -5,6 +5,7 @@ into single coherent spoken responses. No LLM required — uses
 deterministic keyword/intent matching.
 """
 
+import os
 import re
 import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -118,21 +119,36 @@ class VoiceAgent:
                     best_match = (intent, priority)
         return best_match[0]
 
+    def _invoke_tool(self, tool_name: str, student_id: int, args: Dict[str, Any], direct_fn) -> Any:
+        """Invokes a tool directly or optionally via MCP client if USE_MCP_CLIENT is set."""
+        use_mcp = os.environ.get("USE_MCP_CLIENT", "").lower() in ("true", "1", "yes")
+        if use_mcp:
+            try:
+                from backend.mcp_client import mcp_client
+                mcp_args = dict(args)
+                mcp_args["student_id"] = student_id
+                return mcp_client.call_tool(tool_name, mcp_args)
+            except Exception:
+                # Graceful fallback to direct service function
+                return direct_fn()
+        return direct_fn()
+
     def _handle_plan_day(self, student_id: int, utterance: str) -> Dict[str, Any]:
         """Multi-step: today's schedule + pending tasks + study plan."""
         tool_calls = []
 
         # Step 1: Today's reminder
-        today_data = get_today_reminder(student_id)
+        today_data = self._invoke_tool("get_today_reminder", student_id, {}, lambda: get_today_reminder(student_id))
         tool_calls.append({"tool": "get_today_reminder", "args": {}, "result": today_data})
 
         # Step 2: Pending tasks
-        pending = list_tasks(student_id, status="Pending")
+        pending = self._invoke_tool("list_tasks", student_id, {"status": "Pending"}, lambda: list_tasks(student_id, status="Pending"))
         tool_calls.append({"tool": "list_tasks", "args": {"status": "Pending"}, "result": pending})
 
         # Step 3: Study plan
-        study_data = generate_study_plan(student_id, {})
+        study_data = self._invoke_tool("generate_study_plan", student_id, {}, lambda: generate_study_plan(student_id, {}))
         tool_calls.append({"tool": "generate_study_plan", "args": {}, "result": study_data})
+
 
         # Build spoken response
         parts = []
