@@ -53,6 +53,7 @@ def create_app():
     from backend.routes.task_routes import tasks_bp
     from backend.routes.alexa_routes import alexa_bp
     from backend.routes.exam_routes import exam_bp
+    from backend.routes.chat_routes import chat_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(mcp_bp, url_prefix='/api/mcp')
@@ -60,6 +61,8 @@ def create_app():
     app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
     app.register_blueprint(alexa_bp, url_prefix='/api/alexa')
     app.register_blueprint(exam_bp, url_prefix='/api/exams')
+    app.register_blueprint(chat_bp, url_prefix='/api/chat')
+
     
     # 5. Global Security Headers Middleware
     @app.after_request

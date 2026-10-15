@@ -37,6 +37,13 @@ from backend.services.exam_service import (
     set_study_preference,
     set_bulk_study_preferences
 )
+from backend.services.chat_service import (
+    create_or_get_session,
+    list_sessions,
+    get_session_messages,
+    append_message,
+    delete_session
+)
 
 __all__ = [
     'AppError',
@@ -65,5 +72,10 @@ __all__ = [
     'delete_exam',
     'get_study_preferences',
     'set_study_preference',
-    'set_bulk_study_preferences'
+    'set_bulk_study_preferences',
+    'create_or_get_session',
+    'list_sessions',
+    'get_session_messages',
+    'append_message',
+    'delete_session'
 ]

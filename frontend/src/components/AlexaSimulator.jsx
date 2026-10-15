@@ -16,6 +16,7 @@ import {
 import api from '../services/api';
 
 const AlexaSimulator = ({ onTaskAction }) => {
+  const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([
     {
       sender: 'alexa',
@@ -28,6 +29,7 @@ const AlexaSimulator = ({ onTaskAction }) => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [activeTraceId, setActiveTraceId] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -55,10 +57,15 @@ const AlexaSimulator = ({ onTaskAction }) => {
     try {
       const response = await api.post('/alexa/simulate', {
         utterance: text,
+        session_id: sessionId,
         device: "Echo Show 10 (Simulated)"
       });
 
       const alexaRes = response.data;
+      if (alexaRes?.sessionAttributes?.session_id) {
+        setSessionId(alexaRes.sessionAttributes.session_id);
+      }
+
       const speech = alexaRes?.response?.outputSpeech?.text || "I've processed your request.";
       const card = alexaRes?.response?.card;
       const simulation = alexaRes?.simulation;
@@ -194,6 +201,31 @@ const AlexaSimulator = ({ onTaskAction }) => {
                               <span className="font-mono text-brand-500">
                                 tool:{m.simulation.action_executed}
                               </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* What the assistant did panel */}
+                        {m.simulation?.tool_traces && m.simulation.tool_traces.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTraceId(activeTraceId === idx ? null : idx)}
+                              className="text-[10px] text-indigo-500 hover:text-indigo-600 font-medium flex items-center gap-1"
+                            >
+                              <Sparkles size={11} />
+                              {activeTraceId === idx ? 'Hide Assistant Execution Trace' : 'What the assistant did (Trace)'}
+                            </button>
+                            {activeTraceId === idx && (
+                              <div className="mt-1.5 p-2 bg-slate-950 text-slate-200 rounded-lg font-mono text-[9px] overflow-x-auto max-h-36">
+                                {m.simulation.tool_traces.map((trace, tIdx) => (
+                                  <div key={tIdx} className="mb-2 pb-1 border-b border-slate-800 last:border-none last:mb-0">
+                                    <div className="text-emerald-400 font-bold">Tool: {trace.tool_name}</div>
+                                    <div className="text-slate-400">Args: {JSON.stringify(trace.input)}</div>
+                                    <div className="text-sky-300">Success: {String(trace.output?.success)}</div>
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
                         )}

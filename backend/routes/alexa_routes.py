@@ -268,18 +268,39 @@ def simulate_alexa():
 
     from backend.config import Config
     from backend.llm.agent_loop import AgentLoop
+    from backend.services.chat_service import create_or_get_session, append_message, get_session_messages
+
+    # Multi-turn session resolution
+    req_session_id = data.get("session_id")
+    try:
+        chat_sess = create_or_get_session(student_id=student_id, session_id=req_session_id)
+        current_session_id = chat_sess["id"]
+    except Exception:
+        current_session_id = None
+
+    # Load stored history if session exists and history not explicitly provided
+    history = data.get("history")
+    if history is None and current_session_id:
+        stored_msgs = get_session_messages(student_id, current_session_id)
+        # Convert stored messages to format expected by agent loop
+        history = []
+        for sm in stored_msgs:
+            history.append({
+                "role": sm["role"],
+                "content": [{"text": sm["content"]}]
+            })
 
     # Execute conversational agent turn
-    provider_name = Config.LLM_PROVIDER
     loop = AgentLoop(student_id=student_id)
-    history = data.get("history", [])
+    executed_traces = []
 
     try:
-        loop_result = loop.run_turn(clean_utterance, conversation_history=history)
+        loop_result = loop.run_turn(clean_utterance, conversation_history=history or [])
         speech = loop_result.get("speech") or "I've processed your request."
         executed = loop_result.get("tool_calls_executed", [])
         last_tool = executed[-1]["tool_name"] if executed else "conversational_reply"
         last_tool_res = executed[-1]["output"] if executed else None
+        executed_traces = executed
 
         sim_mode = "bedrock" if loop_result.get("provider") == "BedrockProvider" else "deterministic_demo"
         result = {
@@ -294,10 +315,26 @@ def simulate_alexa():
         # Fallback to deterministic demo engine if LLM provider fails
         result = run_deterministic_engine(student_id, clean_utterance)
 
+    # Persist user utterance and assistant reply to chat history
+    if current_session_id:
+        try:
+            append_message(student_id=student_id, session_id=current_session_id, role="user", content=utterance)
+            append_message(
+                student_id=student_id,
+                session_id=current_session_id,
+                role="assistant",
+                content=result.get("speech", ""),
+                action_executed=result.get("action_executed"),
+                tool_trace=executed_traces
+            )
+        except Exception as pe:
+            pass
+
     alexa_response = {
         "version": "1.0",
         "sessionAttributes": {
             "student_id": student_id,
+            "session_id": current_session_id,
             "last_utterance": utterance,
             "history": result.get("history")
         },
@@ -315,9 +352,11 @@ def simulate_alexa():
         },
         "simulation": {
             "provider": "CampusMate Alexa+-style simulation",
+            "session_id": current_session_id,
             "mode": result.get("mode", "deterministic_demo"),
             "action_executed": result.get("action_executed"),
             "tool_result": result.get("tool_result"),
+            "tool_traces": executed_traces,
             "needs_input": result.get("needs_input"),
             "timestamp": datetime.datetime.now().isoformat()
         }

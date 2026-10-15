@@ -140,6 +140,31 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- Chat Sessions Table
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    id TEXT PRIMARY KEY,
+    student_id INTEGER NOT NULL,
+    title TEXT NOT NULL DEFAULT 'Chat Session',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+-- Chat Messages Table
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    student_id INTEGER NOT NULL,
+    role TEXT CHECK(role IN ('user', 'assistant')) NOT NULL,
+    content TEXT NOT NULL,
+    action_executed TEXT,
+    tool_trace TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+
 -- Create Indexes for Performance optimization
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON students(user_id);
@@ -150,3 +175,7 @@ CREATE INDEX IF NOT EXISTS idx_study_plans_student_date ON study_plans(student_i
 CREATE INDEX IF NOT EXISTS idx_timetable_student_day ON timetable(student_id, day_of_week);
 CREATE INDEX IF NOT EXISTS idx_notifications_student_unread ON notifications(student_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON activity_logs(timestamp);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_student ON chat_sessions(student_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id, id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_student ON chat_messages(student_id);
+

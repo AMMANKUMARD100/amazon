@@ -134,7 +134,37 @@ def run_migrations(conn):
         );
     """)
 
+    # 5. Create chat_sessions and chat_messages tables
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id TEXT PRIMARY KEY,
+            student_id INTEGER NOT NULL,
+            title TEXT NOT NULL DEFAULT 'Chat Session',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            student_id INTEGER NOT NULL,
+            role TEXT CHECK(role IN ('user', 'assistant')) NOT NULL,
+            content TEXT NOT NULL,
+            action_executed TEXT,
+            tool_trace TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
+        );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_chat_sessions_student ON chat_sessions(student_id, updated_at);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id, id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_chat_messages_student ON chat_messages(student_id);")
+
     conn.commit()
+
 
 def init_db():
     """Initializes the database schema if tables do not exist and runs migrations."""
