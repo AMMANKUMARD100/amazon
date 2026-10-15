@@ -8,6 +8,7 @@ class TestAlexaAndTasks(unittest.TestCase):
         self.app = create_app()
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
+        self.client.post('/api/auth/login', json={"username": "student", "password": "password123"})
 
     def test_task_crud_and_persistence(self):
         # 1. Add Task with valid date

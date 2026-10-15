@@ -20,6 +20,12 @@ class MCPTestCase(unittest.TestCase):
         # Clear rate limit store to prevent inter-test blocking
         from backend.middleware.security import rate_limit_store
         rate_limit_store.clear()
+        
+        # Authenticate client as student
+        self.client.post('/api/auth/login', json={
+            "username": "student",
+            "password": "password123"
+        })
 
     def tearDown(self):
         self.app_context.pop()
