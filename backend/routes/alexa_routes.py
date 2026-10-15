@@ -266,13 +266,40 @@ def simulate_alexa():
     if not clean_utterance:
         clean_utterance = utterance
 
-    result = run_deterministic_engine(student_id, clean_utterance)
+    from backend.config import Config
+    from backend.llm.agent_loop import AgentLoop
+
+    # Execute conversational agent turn
+    provider_name = Config.LLM_PROVIDER
+    loop = AgentLoop(student_id=student_id)
+    history = data.get("history", [])
+
+    try:
+        loop_result = loop.run_turn(clean_utterance, conversation_history=history)
+        speech = loop_result.get("speech") or "I've processed your request."
+        executed = loop_result.get("tool_calls_executed", [])
+        last_tool = executed[-1]["tool_name"] if executed else "conversational_reply"
+        last_tool_res = executed[-1]["output"] if executed else None
+
+        sim_mode = "bedrock" if loop_result.get("provider") == "BedrockProvider" else "deterministic_demo"
+        result = {
+            "speech": speech,
+            "card": {"title": "CampusMate Assistant", "content": speech},
+            "action_executed": last_tool,
+            "tool_result": last_tool_res,
+            "mode": sim_mode,
+            "history": loop_result.get("messages")
+        }
+    except Exception as e:
+        # Fallback to deterministic demo engine if LLM provider fails
+        result = run_deterministic_engine(student_id, clean_utterance)
 
     alexa_response = {
         "version": "1.0",
         "sessionAttributes": {
             "student_id": student_id,
-            "last_utterance": utterance
+            "last_utterance": utterance,
+            "history": result.get("history")
         },
         "response": {
             "outputSpeech": {

@@ -16,3 +16,9 @@ class Config:
     # Rate Limiting
     RATELIMIT_DEFAULT = "100 per minute"
     RATELIMIT_AUTH = "10 per minute"
+
+    # LLM & Amazon Bedrock Settings
+    LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'demo')  # 'bedrock' or 'demo'
+    BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-haiku-20240307-v1:0')
+    AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+
