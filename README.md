@@ -186,10 +186,11 @@ CampusMateAI/
 
 ## 🧪 Running the Test Suite
 
-We provide a comprehensive unittest suite containing 12 tests covering authentication hashing, MCP tool math correctness, and agent output models. Run it using:
+We provide a comprehensive unittest suite containing 40 tests covering authentication, tenant isolation, tool schema validation, confirmation tokens, Amazon Bedrock Converse integration, multi-turn chat history, and planner boundaries. Run it using:
 ```bash
 python -m unittest discover -s tests
 ```
+*Expected: 40 tests passing (`OK`).*
 
 ---
 
