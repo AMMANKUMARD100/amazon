@@ -6,6 +6,8 @@ __pycache__/
 *.db-journal
 venv/
 .env
+backend/logs/*.log
+*.log
 
 # Node
 node_modules/

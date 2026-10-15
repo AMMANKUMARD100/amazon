@@ -8,13 +8,23 @@ from backend.middleware.logger import log_activity
 agent_bp = Blueprint('agents', __name__)
 
 def get_active_student_id():
-    """Helper to verify current user is a student and return student_id."""
+    """Helper to verify current user is a student and return student_id, or validate student_id for Admin."""
     if not current_user.is_authenticated:
         return None
     if current_user.role == 'Student':
         return current_user.student_id
-    # If admin, read parameter or default
-    return request.args.get("student_id") or request.json.get("student_id") if request.is_json else None
+    if current_user.role == 'Admin':
+        raw_id = request.args.get("student_id") or (request.json.get("student_id") if request.is_json else None)
+        if raw_id:
+            try:
+                sid = int(raw_id)
+                row = execute_query("SELECT id FROM students WHERE id = ?;", (sid,), fetch_one=True)
+                if row:
+                    return row['id']
+            except (ValueError, TypeError):
+                pass
+        return None
+    return None
 
 # Route: Trigger PlannerAgent
 @agent_bp.route('/planner', methods=['GET', 'POST'])
@@ -42,55 +52,17 @@ def save_planner_slots():
     data = request.get_json() or {}
     slots = data.get("slots", [])
     
-    if not slots:
-        return jsonify({"error": "ValidationFailed", "message": "No study slots provided to save."}), 400
-        
-    saved_count = 0
-    # Insert slots with strict validation and transaction persistence check
-    for slot in slots:
-        sub_code = slot.get("code")
-        slot_date = slot.get("date")
-        start_time = slot.get("start_time")
-        end_time = slot.get("end_time")
-        topic = slot.get("topic", "Self-study session")
-        
-        # Validate date format YYYY-MM-DD
-        if not slot_date or not re.match(r"^\d{4}-\d{2}-\d{2}$", slot_date):
-            continue
-            
-        # Look up subject_id by code or fallback
-        sub_row = execute_query(
-            "SELECT id FROM subjects WHERE student_id = ? AND code = ?;",
-            (student_id, sub_code),
-            fetch_one=True
-        )
-        if not sub_row:
-            sub_row = execute_query("SELECT id FROM subjects WHERE student_id = ? LIMIT 1;", (student_id,), fetch_one=True)
-            
-        if sub_row:
-            sub_id = sub_row["id"]
-            try:
-                new_pid = execute_query(
-                    "INSERT INTO study_plans (student_id, subject_id, date, start_time, end_time, topic, status) "
-                    "VALUES (?, ?, ?, ?, ?, ?, 'Scheduled');",
-                    (student_id, sub_id, slot_date, start_time, end_time, topic),
-                    commit=True
-                )
-                # Confirm persistence
-                verify = execute_query("SELECT id FROM study_plans WHERE id = ?;", (new_pid,), fetch_one=True)
-                if verify:
-                    saved_count += 1
-            except Exception:
-                pass
-                
-    if saved_count == 0:
-        return jsonify({"error": "PersistenceFailed", "message": "No valid study sessions could be persisted to database."}), 500
-        
-    log_activity(current_user.id, "SAVE_STUDY_PLAN", f"Saved {saved_count} study slots.", request.remote_addr)
-    return jsonify({
-        "message": f"Successfully scheduled and persisted {saved_count} study sessions.",
-        "saved_count": saved_count
-    }), 201
+    from backend.services.planner_service import save_study_slots
+    from backend.services.exceptions import AppError
+    try:
+        saved_count = save_study_slots(student_id, slots)
+        log_activity(current_user.id, "SAVE_STUDY_PLAN", f"Saved {saved_count} study slots.", request.remote_addr)
+        return jsonify({
+            "message": f"Successfully scheduled and persisted {saved_count} study sessions.",
+            "saved_count": saved_count
+        }), 201
+    except AppError as e:
+        return jsonify(e.to_dict()), e.status_code
 
 # Route: Trigger AttendanceAgent
 @agent_bp.route('/attendance', methods=['GET'])

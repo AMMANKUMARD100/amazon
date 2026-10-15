@@ -47,14 +47,39 @@ CREATE TABLE IF NOT EXISTS attendance (
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL,
-    subject_id INTEGER NOT NULL,
+    subject_id INTEGER,
     title TEXT NOT NULL,
     description TEXT,
     due_date DATE NOT NULL,
     status TEXT CHECK(status IN ('Pending', 'Completed')) NOT NULL DEFAULT 'Pending',
     priority TEXT CHECK(priority IN ('High', 'Medium', 'Low')) NOT NULL DEFAULT 'Medium',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+);
+
+-- Exams Table
+CREATE TABLE IF NOT EXISTS exams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    subject_id INTEGER,
+    title TEXT NOT NULL,
+    exam_date DATE NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+);
+
+-- Study Preferences Table
+CREATE TABLE IF NOT EXISTS study_preferences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    weekday TEXT CHECK(weekday IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')) NOT NULL,
+    available_hours REAL NOT NULL CHECK(available_hours >= 0.0 AND available_hours <= 12.0),
+    UNIQUE(student_id, weekday),
+    FOREIGN KEY(student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
 -- Study Plans Table

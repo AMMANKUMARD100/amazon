@@ -13,13 +13,23 @@ from backend.middleware.logger import log_activity
 alexa_bp = Blueprint('alexa', __name__)
 
 def get_session_student_id():
-    """Extracts student_id exclusively from authenticated session."""
+    """Extracts student_id exclusively from authenticated session, or explicit validated parameter for admin."""
     if not current_user.is_authenticated:
         return None
     if current_user.role == 'Student' and hasattr(current_user, 'student_id') and current_user.student_id:
         return current_user.student_id
     if current_user.role == 'Admin':
-        return current_user.student_id or 1
+        raw_id = request.args.get("student_id") or (request.json.get("student_id") if request.is_json else None)
+        if raw_id:
+            try:
+                sid = int(raw_id)
+                from backend.database.connection import execute_query
+                row = execute_query("SELECT id FROM students WHERE id = ?;", (sid,), fetch_one=True)
+                if row:
+                    return row['id']
+            except (ValueError, TypeError):
+                pass
+        return None
     return None
 
 @alexa_bp.errorhandler(AppError)

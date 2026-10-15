@@ -71,27 +71,17 @@ def add_task(student_id, title, due_date, priority="Medium", description="", sub
     if pri not in ['High', 'Medium', 'Low']:
         pri = 'Medium'
 
-    # Resolve subject_id
+    # Resolve subject_id if provided by code
     if not subject_id and subject_code:
         sub = execute_query(
-            "SELECT id FROM subjects WHERE student_id = ? AND code = ?;",
-            (student_id, subject_code.strip()),
+            "SELECT id FROM subjects WHERE student_id = ? AND (code = ? OR name = ?);",
+            (student_id, subject_code.strip(), subject_code.strip()),
             fetch_one=True
         )
         if sub:
             subject_id = sub['id']
 
-    if not subject_id:
-        first_sub = execute_query("SELECT id FROM subjects WHERE student_id = ? LIMIT 1;", (student_id,), fetch_one=True)
-        if first_sub:
-            subject_id = first_sub['id']
-        else:
-            subject_id = execute_query(
-                "INSERT INTO subjects (student_id, code, name, credits, difficulty) VALUES (?, 'GEN', 'General Studies', 3, 'Medium');",
-                (student_id,),
-                commit=True
-            )
-
+    # General tasks have subject_id = None without touching the subjects table!
     insert_query = """
         INSERT INTO assignments (student_id, subject_id, title, description, due_date, status, priority)
         VALUES (?, ?, ?, ?, ?, 'Pending', ?);

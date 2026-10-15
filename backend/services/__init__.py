@@ -27,6 +27,16 @@ from backend.services.planner_service import (
 )
 from backend.services.faq_service import search_faq
 from backend.services.dashboard_service import get_dashboard_summary
+from backend.services.exam_service import (
+    list_exams,
+    get_exam,
+    add_exam,
+    update_exam,
+    delete_exam,
+    get_study_preferences,
+    set_study_preference,
+    set_bulk_study_preferences
+)
 
 __all__ = [
     'AppError',
@@ -47,5 +57,13 @@ __all__ = [
     'generate_study_plan',
     'save_study_slots',
     'search_faq',
-    'get_dashboard_summary'
+    'get_dashboard_summary',
+    'list_exams',
+    'get_exam',
+    'add_exam',
+    'update_exam',
+    'delete_exam',
+    'get_study_preferences',
+    'set_study_preference',
+    'set_bulk_study_preferences'
 ]
