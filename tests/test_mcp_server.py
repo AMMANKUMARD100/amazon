@@ -36,19 +36,75 @@ class TestMCPServer(unittest.TestCase):
             )
 
     def test_auth_token_validation(self):
-        # When unset, passes
+        # Default behavior: when MCP_AUTH_TOKEN is unset and MCP_ALLOW_NO_AUTH is not true, rejects
         os.environ.pop("MCP_AUTH_TOKEN", None)
+        os.environ.pop("MCP_ALLOW_NO_AUTH", None)
+        self.assertFalse(validate_auth_token(None))
+        self.assertFalse(validate_auth_token("Bearer some-token"))
+
+        # When MCP_ALLOW_NO_AUTH=true, allow bypassing
+        os.environ["MCP_ALLOW_NO_AUTH"] = "true"
         self.assertTrue(validate_auth_token(None))
         self.assertTrue(validate_auth_token("Bearer anything"))
+        os.environ.pop("MCP_ALLOW_NO_AUTH", None)
 
-        # When set, enforces exact token match
-        os.environ["MCP_AUTH_TOKEN"] = "super-secret-mcp-key"
-        self.assertTrue(validate_auth_token("super-secret-mcp-key"))
-        self.assertTrue(validate_auth_token("Bearer super-secret-mcp-key"))
+        # When MCP_AUTH_TOKEN is set, enforces exact token match
+        os.environ["MCP_AUTH_TOKEN"] = "dev_mcp_secret_token_12345"
+        self.assertTrue(validate_auth_token("dev_mcp_secret_token_12345"))
+        self.assertTrue(validate_auth_token("Bearer dev_mcp_secret_token_12345"))
         self.assertFalse(validate_auth_token("Bearer wrong-key"))
         self.assertFalse(validate_auth_token(""))
         self.assertFalse(validate_auth_token(None))
         os.environ.pop("MCP_AUTH_TOKEN", None)
+
+    def test_mcp_http_middleware_authentication(self):
+        from starlette.testclient import TestClient
+        from backend.mcp_server import mcp_app
+
+        os.environ["MCP_AUTH_TOKEN"] = "dev_mcp_secret_token_12345"
+        starlette_app = mcp_app.streamable_http_app()
+        client = TestClient(starlette_app, raise_server_exceptions=False)
+
+        # 1. No token -> 401
+        res_no_token = client.post("/mcp", json={"jsonrpc": "2.0", "method": "tools/list", "id": 1})
+        self.assertEqual(res_no_token.status_code, 401)
+        self.assertIn("Unauthorized", res_no_token.text)
+
+        # 2. Wrong token -> 401
+        res_wrong = client.post(
+            "/mcp",
+            headers={"Authorization": "Bearer wrong-token"},
+            json={"jsonrpc": "2.0", "method": "tools/list", "id": 1}
+        )
+        self.assertEqual(res_wrong.status_code, 401)
+
+        # 3. Correct token -> Passed through middleware (not 401)
+        res_ok = client.post(
+            "/mcp",
+            headers={"Authorization": "Bearer dev_mcp_secret_token_12345"},
+            json={"jsonrpc": "2.0", "method": "tools/list", "id": 1}
+        )
+        self.assertNotEqual(res_ok.status_code, 401)
+
+        os.environ.pop("MCP_AUTH_TOKEN", None)
+
+    def test_bound_student_id_enforcement(self):
+        # When MCP_STUDENT_ID is not set, any valid int student_id is accepted
+        os.environ.pop("MCP_STUDENT_ID", None)
+        dash = get_dashboard(student_id=1)
+        self.assertIsInstance(dash, dict)
+
+        # When MCP_STUDENT_ID is set to 1, student_id=1 succeeds
+        os.environ["MCP_STUDENT_ID"] = "1"
+        dash_bound = get_dashboard(student_id=1)
+        self.assertIsInstance(dash_bound, dict)
+
+        # Mismatched student_id (e.g. 2 != 1) must be rejected
+        with self.assertRaises(PermissionError):
+            get_dashboard(student_id=2)
+
+        os.environ.pop("MCP_STUDENT_ID", None)
+
 
     def test_tools_dictionary_coverage(self):
         self.assertIn("daily_briefing", TOOLS)
@@ -91,7 +147,8 @@ class TestMCPServer(unittest.TestCase):
             title="MCP Test Task",
             due_date="2026-11-20",
             priority="High",
-            description="Created via FastMCP tool"
+            description="Created via FastMCP tool",
+            subject_code="CS101"
         )
         self.assertIsInstance(new_t, dict)
         self.assertEqual(new_t["title"], "MCP Test Task")

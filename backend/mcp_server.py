@@ -21,6 +21,10 @@ from backend.tools import execute_tool, tool_registry
 from backend.services import schedule_service, attendance_service, task_service, dashboard_service
 from mcp.server.fastmcp import FastMCP
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
 logger = logging.getLogger("campusmate.mcp")
 
 
@@ -30,12 +34,17 @@ def validate_auth_token(token_or_header: Optional[str]) -> bool:
     Supports:
       - 'Bearer <token>'
       - '<token>'
-    If MCP_AUTH_TOKEN is not set or empty, authentication is bypassed (dev/offline mode).
-    If MCP_AUTH_TOKEN is set, token must match securely using constant-time comparison.
+    If MCP_AUTH_TOKEN is not set or empty:
+      - If MCP_ALLOW_NO_AUTH=true, allow bypassing for local dev with a warning.
+      - Otherwise, default to requiring a token (reject request).
     """
     expected = os.environ.get("MCP_AUTH_TOKEN", "").strip()
     if not expected:
-        return True
+        allow_no_auth = os.environ.get("MCP_ALLOW_NO_AUTH", "").lower() in ("true", "1", "yes")
+        if allow_no_auth:
+            return True
+        return False
+
     if not token_or_header:
         return False
     header_val = str(token_or_header).strip()
@@ -46,8 +55,78 @@ def validate_auth_token(token_or_header: Optional[str]) -> bool:
     return secrets.compare_digest(token, expected)
 
 
+class MCPAuthMiddleware(BaseHTTPMiddleware):
+    """Starlette middleware that enforces Bearer token authentication on the MCP HTTP endpoint."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Allow preflight CORS OPTIONS requests
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        # Enforce on MCP endpoint routes
+        if request.url.path.startswith("/mcp"):
+            auth_header = request.headers.get("Authorization")
+            if not validate_auth_token(auth_header):
+                return JSONResponse(
+                    {
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32001,
+                            "message": "Unauthorized: Missing, invalid, or mismatched MCP Bearer token."
+                        },
+                        "id": None
+                    },
+                    status_code=401,
+                    headers={"WWW-Authenticate": "Bearer"}
+                )
+
+        return await call_next(request)
+
+
 class CampusMateFastMCP(FastMCP):
-    """Extended FastMCP application with streamable-http transport support."""
+    """Extended FastMCP application with streamable-http transport and auth middleware support."""
+
+    def streamable_http_app(self):
+        """Constructs and returns the underlying Starlette app equipped with auth middleware."""
+        app = super().streamable_http_app()
+        # Insert auth middleware if not already attached
+        has_auth = any(
+            getattr(m, "cls", None) == MCPAuthMiddleware or isinstance(m, MCPAuthMiddleware)
+            for m in getattr(app, "user_middleware", [])
+        )
+        if not has_auth:
+            app.add_middleware(MCPAuthMiddleware)
+        return app
+
+    async def run_streamable_http_async(self) -> None:
+        """Run the server using StreamableHTTP transport with auth middleware wired in."""
+        import uvicorn
+
+        starlette_app = self.streamable_http_app()
+
+        # Audit auth configuration on startup
+        expected = os.environ.get("MCP_AUTH_TOKEN", "").strip()
+        allow_no_auth = os.environ.get("MCP_ALLOW_NO_AUTH", "").lower() in ("true", "1", "yes")
+        if not expected:
+            if allow_no_auth:
+                print("WARNING: MCP_AUTH_TOKEN is not set! Running in insecure mode because MCP_ALLOW_NO_AUTH=true.")
+            else:
+                print("WARNING: MCP_AUTH_TOKEN is not set. All incoming requests will be rejected with 401 unless MCP_AUTH_TOKEN is configured or MCP_ALLOW_NO_AUTH=true is set.")
+        else:
+            print("INFO: MCP Bearer token authentication active.")
+
+        bound_student = os.environ.get("MCP_STUDENT_ID", "").strip()
+        if bound_student:
+            print(f"INFO: MCP tool execution strictly bound to student_id={bound_student}.")
+
+        config = uvicorn.Config(
+            starlette_app,
+            host=self.settings.host,
+            port=self.settings.port,
+            log_level=self.settings.log_level.lower(),
+        )
+        server = uvicorn.Server(config)
+        await server.serve()
 
     def run(self, transport: str = "streamable-http", **kwargs):
         """Runs the MCP server over requested transport (default: streamable-http)."""
@@ -62,17 +141,8 @@ class CampusMateFastMCP(FastMCP):
                 self.settings.port = port
 
         if transport == "streamable-http":
-            if hasattr(self, "run_streamable_http_async"):
-                import anyio
-                try:
-                    return anyio.run(self.run_streamable_http_async)
-                except TypeError:
-                    return anyio.run(lambda: self.run_streamable_http_async(host=host, port=port))
-            # Fall back to base class run
-            try:
-                return super().run(transport="streamable-http", **kwargs)
-            except Exception:
-                return super().run(transport="sse", **kwargs)
+            import anyio
+            return anyio.run(self.run_streamable_http_async)
         return super().run(transport=transport, **kwargs)
 
 
@@ -88,14 +158,30 @@ except TypeError:
 # -------------------------------------------------------------
 
 def _validate_student_id(student_id: Any) -> int:
-    """Ensures student_id is a valid integer."""
+    """Ensures student_id is a valid integer and verifies bound MCP_STUDENT_ID if set."""
     if student_id is None:
         raise ValueError("A valid student_id is required.")
     if isinstance(student_id, str) and student_id.isdigit():
-        return int(student_id)
-    if not isinstance(student_id, int):
+        sid = int(student_id)
+    elif isinstance(student_id, int):
+        sid = student_id
+    else:
         raise ValueError("A valid integer student_id is required.")
-    return student_id
+
+    # Bound student check: stop trusting caller student_id blindly
+    bound_id = os.environ.get("MCP_STUDENT_ID", "").strip()
+    if bound_id:
+        try:
+            expected_sid = int(bound_id)
+            if sid != expected_sid:
+                raise PermissionError(
+                    f"Access Denied: Tool invocation student_id ({sid}) does not match authenticated student ({expected_sid})."
+                )
+        except ValueError:
+            pass
+
+    return sid
+
 
 
 # -------------------------------------------------------------
@@ -501,3 +587,9 @@ __all__ = [
     "get_timetable",
     "calculate_cgpa"
 ]
+
+if __name__ == "__main__":
+    port = int(os.environ.get("MCP_PORT", 8080))
+    print(f"Starting CampusMate AI FastMCP Server on port {port}...")
+    mcp_app.run(transport="streamable-http", host="0.0.0.0", port=port)
+
