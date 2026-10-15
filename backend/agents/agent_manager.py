@@ -34,7 +34,7 @@ class AgentManager:
         
         try:
             if agent_name == "PlannerAgent":
-                return self.planner_agent.run()
+                return self.planner_agent.run(payload)
                 
             elif agent_name == "AttendanceAgent":
                 return self.attendance_agent.run()

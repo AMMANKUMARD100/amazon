@@ -88,3 +88,54 @@
 2026-07-02 02:33:14,282 - auth - INFO - User logged in successfully: student (Role: Student)
 2026-07-03 17:59:00,179 - auth - INFO - User logged in successfully: student (Role: Student)
 2026-07-03 18:31:11,234 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:06:58,720 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:06:58,932 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:06:59,148 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:06:59,351 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:06:59,558 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:06:59,766 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:00,007 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:00,231 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:00,455 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:00,687 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:00,689 - auth - WARNING - Rate limit exceeded by IP: 127.0.0.1 for path: /api/auth/login
+2026-10-15 18:07:02,104 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:07:02,315 - auth - INFO - User logged in successfully: admin (Role: Admin)
+2026-10-15 18:07:03,066 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:07:03,068 - auth - WARNING - Failed login attempt for non-existent username: nonexistent
+2026-10-15 18:07:03,820 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:07:04,057 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:28,301 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:28,523 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:28,767 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:28,990 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:29,218 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:29,444 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:29,670 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:29,886 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:30,102 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:30,313 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:30,315 - auth - WARNING - Rate limit exceeded by IP: 127.0.0.1 for path: /api/auth/login
+2026-10-15 18:09:31,726 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:09:32,003 - auth - INFO - User logged in successfully: admin (Role: Admin)
+2026-10-15 18:09:32,820 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:09:32,822 - auth - WARNING - Failed login attempt for non-existent username: nonexistent
+2026-10-15 18:09:33,603 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:09:33,822 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:58,514 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:58,800 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:59,049 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:59,303 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:59,583 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:11:59,847 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:00,104 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:00,342 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:00,586 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:00,837 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:00,839 - auth - WARNING - Rate limit exceeded by IP: 127.0.0.1 for path: /api/auth/login
+2026-10-15 18:12:02,407 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:12:02,667 - auth - INFO - User logged in successfully: admin (Role: Admin)
+2026-10-15 18:12:03,582 - auth - WARNING - Incorrect password attempt for user: student
+2026-10-15 18:12:03,584 - auth - WARNING - Failed login attempt for non-existent username: nonexistent
+2026-10-15 18:12:04,487 - auth - INFO - User logged in successfully: student (Role: Student)
+2026-10-15 18:12:04,785 - auth - WARNING - Incorrect password attempt for user: student

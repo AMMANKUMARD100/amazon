@@ -1247,3 +1247,84 @@
 2026-07-04 01:11:58,355 - mcp - INFO - Executing MCP Tool: getAssignments
 2026-07-04 01:12:28,641 - mcp - INFO - Executing MCP Tool: calculateAttendance
 2026-07-04 01:12:28,664 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:06:54,032 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:06:55,749 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:06:56,204 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:06:56,325 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:06:56,765 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:06:56,779 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:06:56,890 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:06:57,359 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:06:57,370 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:06:57,485 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:06:58,037 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:00,784 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:01,349 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:02,415 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:03,155 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:04,165 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:04,669 - mcp - INFO - Executing MCP Tool: addAssignment
+2026-10-15 18:07:04,677 - mcp - INFO - MCP Tool addAssignment created assignment 7
+2026-10-15 18:07:04,682 - mcp - INFO - Executing MCP Tool: deleteAssignment
+2026-10-15 18:07:04,691 - mcp - INFO - MCP Tool deleteAssignment removed assignment 7
+2026-10-15 18:07:04,787 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:05,231 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:07:05,331 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:07:05,806 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:09:25,059 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:25,512 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:25,831 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:09:25,921 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:26,271 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:09:26,274 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:09:26,372 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:26,746 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:09:26,764 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:09:27,009 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:27,605 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:30,427 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:30,987 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:32,132 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:32,927 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:33,934 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:34,383 - mcp - INFO - Executing MCP Tool: addAssignment
+2026-10-15 18:09:34,393 - mcp - INFO - MCP Tool addAssignment created assignment 7
+2026-10-15 18:09:34,397 - mcp - INFO - Executing MCP Tool: deleteAssignment
+2026-10-15 18:09:34,406 - mcp - INFO - MCP Tool deleteAssignment removed assignment 7
+2026-10-15 18:09:34,507 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:35,010 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:09:35,124 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:09:35,582 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:10:02,233 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:10:03,099 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:10:03,180 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:10:11,431 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:10:11,478 - mcp - INFO - Task created successfully ID=7 for student_id=1
+2026-10-15 18:11:45,711 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:46,459 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:47,014 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:11:47,172 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:47,727 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:11:47,730 - mcp - INFO - Executing MCP Tool: searchFAQ
+2026-10-15 18:11:47,845 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:48,403 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:11:48,426 - mcp - INFO - Executing MCP Tool: getAssignments
+2026-10-15 18:11:48,585 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:49,261 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:57,482 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:57,540 - mcp - INFO - Task created successfully ID=7 for student_id=1
+2026-10-15 18:11:57,582 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:11:57,720 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:00,960 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:01,619 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:02,798 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:03,692 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:04,925 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:05,464 - mcp - INFO - Executing MCP Tool: addAssignment
+2026-10-15 18:12:05,476 - mcp - INFO - MCP Tool addAssignment created assignment 7
+2026-10-15 18:12:05,483 - mcp - INFO - Executing MCP Tool: deleteAssignment
+2026-10-15 18:12:05,496 - mcp - INFO - MCP Tool deleteAssignment removed assignment 7
+2026-10-15 18:12:05,629 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:06,169 - mcp - INFO - Executing MCP Tool: calculateAttendance
+2026-10-15 18:12:06,313 - mcp - INFO - Database schema initialized successfully.
+2026-10-15 18:12:06,893 - mcp - INFO - Executing MCP Tool: getAssignments

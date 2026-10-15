@@ -50,10 +50,14 @@ def create_app():
     from backend.routes.auth_routes import auth_bp
     from backend.routes.mcp_routes import mcp_bp
     from backend.routes.agent_routes import agent_bp
+    from backend.routes.task_routes import tasks_bp
+    from backend.routes.alexa_routes import alexa_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(mcp_bp, url_prefix='/api/mcp')
     app.register_blueprint(agent_bp, url_prefix='/api/agents')
+    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
+    app.register_blueprint(alexa_bp, url_prefix='/api/alexa')
     
     # 5. Global Security Headers Middleware
     @app.after_request

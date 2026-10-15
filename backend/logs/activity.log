@@ -581,3 +581,24 @@
 2026-07-04 01:11:28,638 - activity - INFO - AgentManager: Dispatching task to NotificationAgent for student_id: 1
 2026-07-04 01:11:58,332 - activity - INFO - AgentManager: Dispatching task to NotificationAgent for student_id: 1
 2026-07-04 01:12:28,639 - activity - INFO - AgentManager: Dispatching task to NotificationAgent for student_id: 1
+2026-10-15 18:06:56,201 - activity - INFO - AgentManager: Dispatching task to AttendanceAgent for student_id: 1
+2026-10-15 18:06:56,764 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:06:56,779 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:06:57,359 - activity - INFO - AgentManager: Dispatching task to PlannerAgent for student_id: 1
+2026-10-15 18:07:03,835 - activity - INFO - User 1 - Action: LOGIN - Details: User student logged in from 127.0.0.1 - IP: 127.0.0.1
+2026-10-15 18:09:25,828 - activity - INFO - AgentManager: Dispatching task to AttendanceAgent for student_id: 1
+2026-10-15 18:09:26,270 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:09:26,273 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:09:26,745 - activity - INFO - AgentManager: Dispatching task to PlannerAgent for student_id: 1
+2026-10-15 18:09:33,611 - activity - INFO - User 1 - Action: LOGIN - Details: User student logged in from 127.0.0.1 - IP: 127.0.0.1
+2026-10-15 18:10:03,147 - activity - INFO - User 1 - Action: ALEXA_SIMULATION_UTTERANCE - Details: Utterance: 'Alexa, show my pending tasks' -> Executed: list_tasks - IP: 127.0.0.1
+2026-10-15 18:10:03,172 - activity - INFO - User 1 - Action: ALEXA_SIMULATION_UTTERANCE - Details: Utterance: 'Alexa, check my attendance' -> Executed: check_attendance - IP: 127.0.0.1
+2026-10-15 18:10:03,219 - activity - INFO - AgentManager: Dispatching task to PlannerAgent for student_id: 1
+2026-10-15 18:11:47,011 - activity - INFO - AgentManager: Dispatching task to AttendanceAgent for student_id: 1
+2026-10-15 18:11:47,725 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:11:47,729 - activity - INFO - AgentManager: Dispatching task to FAQAgent for student_id: 1
+2026-10-15 18:11:48,401 - activity - INFO - AgentManager: Dispatching task to PlannerAgent for student_id: 1
+2026-10-15 18:11:49,226 - activity - INFO - User 1 - Action: ALEXA_SIMULATION_UTTERANCE - Details: Utterance: 'Alexa, show my pending tasks' -> Executed: list_tasks - IP: 127.0.0.1
+2026-10-15 18:11:49,251 - activity - INFO - User 1 - Action: ALEXA_SIMULATION_UTTERANCE - Details: Utterance: 'Alexa, check my attendance' -> Executed: check_attendance - IP: 127.0.0.1
+2026-10-15 18:11:49,283 - activity - INFO - AgentManager: Dispatching task to PlannerAgent for student_id: 1
+2026-10-15 18:12:04,499 - activity - INFO - User 1 - Action: LOGIN - Details: User student logged in from 127.0.0.1 - IP: 127.0.0.1
