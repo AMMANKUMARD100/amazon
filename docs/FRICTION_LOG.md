@@ -1,0 +1,33 @@
+# CampusMate AI – Developer Friction Log
+
+**Project:** CampusMate AI  
+**Hackathon Track:** Alexa+ Track (Amazon Developer Hackathon)  
+**SDKs:** Python `mcp` SDK v1.29.0, FastMCP, `boto3` Bedrock Runtime, Web Speech API  
+**Environment:** Windows 11, Python 3.14, Flask, Vite + React 18  
+
+---
+
+## Friction & Issue Log Table
+
+| Timestamp | Action | Expected | Actual | Severity | Resolution |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| **2026-10-12 10:15** | Import FastMCP from `mcp.server` | Clean import via `from mcp.server import FastMCP` | `ImportError: cannot import name 'FastMCP' from 'mcp.server'` | Medium | Updated import to subpackage path: `from mcp.server.fastmcp import FastMCP` as reorganized in `mcp` v1.29.0. |
+| **2026-10-12 11:30** | Configure streamable HTTP transport on port 8000 | FastMCP server binds and serves tool definitions over HTTP | Connection refused on Windows localhost; port collision with Flask dev runner | High | Configured distinct host/port bindings (`127.0.0.1:8000` for FastMCP, `5000` for Flask). Created dedicated startup script. |
+| **2026-10-12 14:00** | Pass tool schema to Amazon Bedrock Converse API | Bedrock accepts standard JSON schema dictionary | ClientError: `ValidationException: Expected 'json' field inside inputSchema` | High | Implemented `BedrockProvider.format_tools_for_bedrock()` helper to nest tool schemas inside `{"toolSpec": {"name": ..., "inputSchema": {"json": schema}}}`. |
+| **2026-10-13 09:45** | Execute destructive tool `delete_task` via voice utterance | Tool deletes task safely without verbal confirmation prompt | Accidental task deletion occurs when voice recognition hears similar sounding task | Critical | Added short-lived confirmation tokens (`confirm_token`). Deletions without valid token return a pending confirmation challenge with a 5-minute TTL. |
+| **2026-10-13 13:20** | Handle missing parameter (due date) in voice task creation | Voice model invents current date or defaults to random deadline | Model hallucinated tomorrow's date when student only said "Add assignment Physics" | High | Enforced zero-hallucination guardrail in system prompt & tool schema. `add_task` requires explicit date; if omitted, agent prompts student for date. |
+| **2026-10-13 16:10** | Web Speech API continuous recognition on Chromium | Microphone stays open for conversational dialog turns | Browser auto-stops recognition after 3-5 seconds of ambient silence | Medium | Implemented auto-restart watchdog in React `VoiceSimulator.jsx` that smoothly restarts `webkitSpeechRecognition` on `onend` unless explicitly toggled off. |
+| **2026-10-14 10:00** | Authenticate student requests across MCP streamable HTTP | MCP client passes JWT or session cookie to identify student | MCP streamable-http specification lacks standard HTTP header propagation in default client | High | Injected student context via authenticated session middleware and parameter envelope (`student_id` validation via session claims). |
+| **2026-10-14 14:40** | Multiple task match ambiguity resolution | Voice response lists matching tasks and prompts for task ID | Voice agent selected first candidate arbitrarily without user confirmation | Medium | Added ambiguity detection to `_resolve_task_identifier()`. Returns candidate list (`candidates: [...]`) so agent prompts student to specify by ID. |
+| **2026-10-15 09:30** | Run FastMCP async loop inside synchronous Flask thread | Seamless execution of async MCP handlers from sync Flask routes | `RuntimeError: There is no current event loop in thread` on Windows Python 3.14 | Medium | Initialized explicit event loop per thread using `asyncio.new_event_loop()` and `asyncio.set_event_loop()`. |
+| *[FILL IN]* | *[FILL IN: Action attempted]* | *[FILL IN: Expected result]* | *[FILL IN: Actual behavior]* | *[Low/Med/High]* | *[FILL IN: How the issue was resolved]* |
+| *[FILL IN]* | *[FILL IN: Action attempted]* | *[FILL IN: Expected result]* | *[FILL IN: Actual behavior]* | *[Low/Med/High]* | *[FILL IN: How the issue was resolved]* |
+| *[FILL IN]* | *[FILL IN: Action attempted]* | *[FILL IN: Expected result]* | *[FILL IN: Actual behavior]* | *[Low/Med/High]* | *[FILL IN: How the issue was resolved]* |
+
+---
+
+## Key Takeaways for Hackathon Developers
+
+1. **Schema Mappings Matter:** Foundation model providers (Bedrock, Anthropic, OpenAI) each wrap tool JSON schemas with slight metadata variations (e.g., Bedrock's `toolSpec` wrapper). Maintain a canonical tool definition in Python and build clean adapter mappers.
+2. **Design for Voice Idempotency:** Voice inputs are prone to background noise, partial transcripts, and accidental speech triggers. State-modifying tools MUST require confirmation tokens or explicit confirmation loops.
+3. **Async Awareness on Windows:** When pairing FastMCP with traditional Flask or WSGI backends, always account for Windows asynchronous loop policies (`WindowsSelectorEventLoopPolicy` vs `ProactorEventLoop`).

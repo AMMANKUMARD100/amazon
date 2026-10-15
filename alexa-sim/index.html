@@ -1,0 +1,2797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusMate Alexa+ Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient-start: #1a1a2e;
+      --bg-gradient-end: #16213e;
+      --bg-surface: rgba(22, 33, 62, 0.75);
+      --bg-surface-elevated: rgba(30, 42, 74, 0.85);
+      --bg-card: rgba(15, 23, 42, 0.65);
+      --border-color: rgba(99, 102, 241, 0.2);
+      --border-glow: rgba(0, 242, 254, 0.35);
+      
+      --alexa-cyan: #00f2fe;
+      --alexa-blue: #4facfe;
+      --alexa-purple: #9d4edd;
+      --alexa-pink: #f72585;
+      --alexa-amber: #f59e0b;
+      --alexa-emerald: #10b981;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ambient background lights */
+    .ambient-glow-1 {
+      position: fixed;
+      top: -150px;
+      left: 10%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79, 172, 254, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-glow-2 {
+      position: fixed;
+      bottom: -150px;
+      right: 10%;
+      width: 550px;
+      height: 550px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(157, 78, 221, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* App Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(26, 26, 46, 0.8);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--alexa-cyan), var(--alexa-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+    }
+
+    .brand-logo svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffffff;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: linear-gradient(90deg, #00f2fe, #4facfe);
+      color: #0b1120;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-dot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-header.active {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: var(--alexa-blue);
+      color: var(--alexa-cyan);
+    }
+
+    /* Main Container Layout */
+    .app-main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 440px;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1100px) {
+      .app-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Stage: Voice interaction and live conversation */
+    .interaction-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      height: calc(100vh - 110px);
+    }
+
+    /* Alexa Orb Section */
+    .orb-hero {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .orb-container {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin: 0.5rem 0;
+      user-select: none;
+    }
+
+    /* The Glowing Orb */
+    .orb-core {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #00f2fe 0%, #4facfe 40%, #7928ca 80%, #1e1e38 100%);
+      box-shadow: 
+        0 0 35px rgba(0, 242, 254, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.6),
+        0 0 60px rgba(121, 40, 202, 0.35);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .orb-mic-icon {
+      width: 38px;
+      height: 38px;
+      fill: #ffffff;
+      opacity: 0.95;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      transition: all 0.3s ease;
+    }
+
+    /* Ambient Outer Halo / Ripple rings */
+    .orb-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    .orb-halo-1 {
+      width: 130px;
+      height: 130px;
+      border: 1.5px solid rgba(0, 242, 254, 0.35);
+    }
+
+    .orb-halo-2 {
+      width: 155px;
+      height: 155px;
+      border: 1px dashed rgba(157, 78, 221, 0.4);
+    }
+
+    /* ORB ANIMATION STATES */
+    /* Idle State */
+    .orb-container.idle .orb-core {
+      animation: orb-breathe 4s infinite ease-in-out;
+    }
+    .orb-container.idle .orb-halo-2 {
+      animation: rotate-slow 24s linear infinite;
+    }
+
+    /* Listening State */
+    .orb-container.listening .orb-core {
+      transform: scale(1.12);
+      background: radial-gradient(circle at 35% 35%, #00f2fe 0%, #38ef7d 45%, #11998e 90%);
+      box-shadow: 
+        0 0 50px rgba(0, 242, 254, 0.8),
+        0 0 90px rgba(56, 239, 125, 0.5),
+        inset 0 0 25px #ffffff;
+    }
+    .orb-container.listening .orb-halo-1 {
+      border-color: rgba(56, 239, 125, 0.7);
+      animation: orb-ripple 1.4s infinite cubic-bezier(0, 0.2, 0.8, 1);
+    }
+    .orb-container.listening .orb-halo-2 {
+      border-color: rgba(0, 242, 254, 0.7);
+      animation: rotate-fast 4s linear infinite;
+    }
+
+    /* Thinking / Processing State */
+    .orb-container.thinking .orb-core {
+      background: radial-gradient(circle at 35% 35%, #f72585 0%, #7209b7 50%, #3a0ca3 100%);
+      box-shadow: 
+        0 0 55px rgba(247, 37, 133, 0.7),
+        0 0 90px rgba(114, 9, 183, 0.5);
+      animation: orb-pulse 0.9s infinite alternate ease-in-out;
+    }
+    .orb-container.thinking .orb-halo-2 {
+      border: 2px solid transparent;
+      border-top-color: #f72585;
+      border-right-color: #4facfe;
+      animation: rotate-fast 1.2s linear infinite;
+    }
+
+    /* Speaking State */
+    .orb-container.speaking .orb-core {
+      background: radial-gradient(circle at 35% 35%, #4facfe 0%, #00f2fe 40%, #9d4edd 90%);
+      box-shadow: 
+        0 0 55px rgba(79, 172, 254, 0.8),
+        0 0 100px rgba(157, 78, 221, 0.6);
+      animation: orb-vocalize 0.7s infinite alternate ease-in-out;
+    }
+    .orb-container.speaking .orb-halo-1 {
+      animation: orb-ripple 1.8s infinite ease-out;
+      border-color: rgba(0, 242, 254, 0.6);
+    }
+
+    @keyframes orb-breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(0, 242, 254, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5); }
+      50% { transform: scale(1.04); box-shadow: 0 0 50px rgba(157, 78, 221, 0.5), inset 0 0 25px rgba(255, 255, 255, 0.7); }
+    }
+
+    @keyframes orb-pulse {
+      0% { transform: scale(0.96); }
+      100% { transform: scale(1.06); }
+    }
+
+    @keyframes orb-vocalize {
+      0% { transform: scale(1.02); filter: brightness(1); }
+      100% { transform: scale(1.14); filter: brightness(1.2); }
+    }
+
+    @keyframes orb-ripple {
+      0% { width: 100px; height: 100px; opacity: 1; }
+      100% { width: 180px; height: 180px; opacity: 0; }
+    }
+
+    @keyframes rotate-slow {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes rotate-fast {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .orb-label {
+      margin-top: 0.6rem;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .orb-label strong {
+      color: var(--alexa-cyan);
+    }
+
+    /* Suggestion Chips */
+    .quick-chips-wrapper {
+      width: 100%;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.25rem 0.25rem 0.5rem 0.25rem;
+      scrollbar-width: thin;
+    }
+
+    .quick-chips-wrapper::-webkit-scrollbar {
+      height: 4px;
+    }
+    .quick-chips-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    .chip-btn {
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .chip-btn:hover {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--alexa-cyan);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .chip-btn.special-plan {
+      background: linear-gradient(90deg, rgba(157, 78, 221, 0.2), rgba(79, 172, 254, 0.2));
+      border-color: rgba(157, 78, 221, 0.4);
+      color: #e0b0ff;
+    }
+
+    .chip-btn.special-plan:hover {
+      border-color: var(--alexa-purple);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(157, 78, 221, 0.4);
+    }
+
+    /* Live Transcript Section */
+    .transcript-container {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .transcript-header {
+      padding: 0.85rem 1.25rem;
+      background: rgba(0, 0, 0, 0.15);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .transcript-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .transcript-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      scroll-behavior: smooth;
+    }
+
+    .transcript-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .transcript-messages::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+    }
+
+    /* Messages */
+    .msg-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 85%;
+      animation: msg-appear 0.25s ease-out;
+    }
+
+    @keyframes msg-appear {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-group.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .msg-group.assistant {
+      align-self: flex-start;
+      align-items: flex-start;
+      max-width: 92%;
+    }
+
+    .msg-author {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text-dim);
+      padding: 0 0.4rem;
+    }
+
+    .msg-bubble {
+      padding: 0.85rem 1.1rem;
+      border-radius: 16px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .msg-bubble.user {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
+    }
+
+    .msg-bubble.assistant {
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .msg-bubble .action-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      color: var(--alexa-cyan);
+    }
+
+    /* Structured Rich Response Cards in Chat */
+    .rich-card {
+      margin-top: 0.75rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.85rem;
+      width: 100%;
+    }
+
+    .rich-card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--alexa-cyan);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rich-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .rich-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.6rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      font-size: 0.83rem;
+    }
+
+    .item-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .item-tag.urgent { background: rgba(247, 37, 133, 0.2); color: #ff70a6; }
+    .item-tag.warning { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .item-tag.good { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    /* Progress bar for attendance */
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      margin-top: 0.35rem;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.8s ease;
+    }
+
+    /* Input Dock */
+    .input-dock {
+      padding: 0.85rem 1.25rem;
+      background: rgba(15, 23, 42, 0.85);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mic-dock-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .mic-dock-btn:hover {
+      background: rgba(0, 242, 254, 0.2);
+      border-color: var(--alexa-cyan);
+      color: var(--alexa-cyan);
+    }
+
+    .mic-dock-btn.active {
+      background: linear-gradient(135deg, #f72585, #7209b7);
+      border-color: #f72585;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(247, 37, 133, 0.5);
+    }
+
+    .text-input-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      color: var(--text-main);
+      font-size: 0.92rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .text-input:focus {
+      border-color: var(--alexa-blue);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.15);
+    }
+
+    .text-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .send-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--alexa-cyan), var(--alexa-blue));
+      border: none;
+      color: #0b1120;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);
+    }
+
+    /* Right Side: Tool Call Inspector & MCP Debug Panel */
+    .inspector-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 110px);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .inspector-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .inspector-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .inspector-counter {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+    }
+
+    /* Mode Selector inside Inspector */
+    .inspector-mode-selector {
+      padding: 0.75rem 1.25rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .mode-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .mode-toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .mode-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 0.45rem 0.6rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .mode-toggle-btn.active {
+      background: linear-gradient(135deg, rgba(79, 172, 254, 0.25), rgba(157, 78, 221, 0.25));
+      border: 1px solid var(--alexa-blue);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Live Protocol Flow Diagram */
+    .protocol-flow {
+      padding: 0.75rem 1.25rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.3rem;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .flow-node {
+      padding: 0.25rem 0.45rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .flow-node.highlight {
+      background: rgba(0, 242, 254, 0.12);
+      border-color: var(--alexa-cyan);
+      color: var(--alexa-cyan);
+      font-weight: 600;
+    }
+
+    .flow-arrow {
+      color: var(--text-dim);
+    }
+
+    /* Inspector Logs List */
+    .inspector-logs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .inspector-logs::-webkit-scrollbar {
+      width: 6px;
+    }
+    .inspector-logs::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+    }
+
+    .empty-logs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-dim);
+      text-align: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      padding: 2rem;
+    }
+
+    .empty-logs svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--text-dim);
+      opacity: 0.5;
+    }
+
+    /* Tool Call Card */
+    .tool-call-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      animation: msg-appear 0.2s ease-out;
+    }
+
+    .tool-call-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .tool-call-card.multi-step {
+      border-left: 3px solid var(--alexa-purple);
+    }
+
+    .tool-call-header {
+      padding: 0.65rem 0.85rem;
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tool-call-name-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-call-name {
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--alexa-cyan);
+    }
+
+    .tool-step-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: rgba(157, 78, 221, 0.25);
+      color: #d8b4fe;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .tool-call-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .tool-latency {
+      font-family: var(--font-mono);
+      color: #34d399;
+    }
+
+    .tool-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .tool-call-body {
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(10, 15, 30, 0.5);
+    }
+
+    .code-block-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-box {
+      background: #080b14;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      max-height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .code-box::-webkit-scrollbar {
+      width: 4px;
+    }
+    .code-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #16213e;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-backdrop.open .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem;
+      border-radius: 6px;
+    }
+    .modal-close:hover {
+      color: var(--text-main);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      font-family: var(--font-sans);
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--alexa-cyan);
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--alexa-cyan), var(--alexa-blue));
+      border: none;
+      color: #0b1120;
+      padding: 0.55rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-left: 4px solid var(--alexa-cyan);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: #ffffff;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      animation: toast-in 0.3s ease-out;
+      pointer-events: auto;
+    }
+
+    @keyframes toast-in {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="#ffffff" stroke-width="2.2"/>
+          <path d="M12 7v5l3 3" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        CampusMate Alexa+ Simulator
+        <span class="brand-badge">Agent Skill</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-badge" id="backendStatusBadge">
+        <div class="status-dot"></div>
+        <span id="backendStatusText">Flask Connected (5000)</span>
+      </div>
+
+      <button class="btn-header" id="btnToggleSpeech" title="Toggle voice playback">
+        <svg id="speechIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <span id="speechToggleLabel">Audio On</span>
+      </button>
+
+      <button class="btn-header" id="btnSettings" title="Configure endpoints and parameters">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Config</span>
+      </button>
+
+      <button class="btn-header" id="btnClearHistory" title="Clear conversation log">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span>Clear</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <main class="app-main">
+    <!-- Left Interaction Stage -->
+    <section class="interaction-stage">
+      <!-- Orb Section -->
+      <div class="orb-hero">
+        <div class="orb-container idle" id="alexaOrb" title="Click orb to speak">
+          <div class="orb-halo orb-halo-1"></div>
+          <div class="orb-halo orb-halo-2"></div>
+          <div class="orb-core">
+            <svg class="orb-mic-icon" id="orbMicIcon" viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="19" x2="12" y2="23" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+              <line x1="8" y1="23" x2="16" y2="23" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="orb-label" id="orbStatusLabel">
+          Click the orb or say <strong>"Hey Alexa"</strong>
+        </div>
+
+        <!-- Quick Utterance Chips -->
+        <div class="quick-chips-wrapper">
+          <button class="chip-btn special-plan" data-utterance="Plan my evening">
+            🌙 Plan My Evening
+          </button>
+          <button class="chip-btn" data-utterance="What is my daily briefing?">
+            ☀️ Today's Briefing
+          </button>
+          <button class="chip-btn" data-utterance="What assignments are due?">
+            📝 List Tasks
+          </button>
+          <button class="chip-btn" data-utterance="Check my attendance">
+            📊 Attendance
+          </button>
+          <button class="chip-btn" data-utterance="Show my classes today">
+            📅 Timetable
+          </button>
+          <button class="chip-btn" data-utterance="Generate a study plan">
+            🧠 Study Plan
+          </button>
+          <button class="chip-btn" data-utterance="What is my CGPA?">
+            🎓 My CGPA
+          </button>
+          <button class="chip-btn" data-utterance="When are my exams?">
+            📑 Upcoming Exams
+          </button>
+          <button class="chip-btn" data-utterance="What is the hostel curfew policy?">
+            ❓ FAQ Policy
+          </button>
+        </div>
+      </div>
+
+      <!-- Transcript Container -->
+      <div class="transcript-container">
+        <div class="transcript-header">
+          <div class="transcript-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Live Conversation Transcript
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-dim);" id="sessionTimer">Session Active</span>
+        </div>
+
+        <div class="transcript-messages" id="chatMessages">
+          <!-- Initial Welcome Message -->
+          <div class="msg-group assistant">
+            <span class="msg-author">Alexa+ · CampusMate AI</span>
+            <div class="msg-bubble assistant">
+              Good day, Alex! I am your <strong>CampusMate Alexa+ Concierge</strong>. You can ask me to brief your day, list pending assignments, check attendance risk, manage study plans, or say <em>"Plan my evening"</em> for a multi-step schedule.
+              <br><br>
+              <div class="action-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                Ready for Voice & Text Commands
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Dock -->
+        <div class="input-dock">
+          <button class="mic-dock-btn" id="btnMicInput" title="Toggle Microphone">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+
+          <div class="text-input-wrapper">
+            <input type="text" class="text-input" id="userInputText" placeholder="Ask CampusMate anything (or click the microphone)..." autocomplete="off" />
+          </div>
+
+          <button class="send-btn" id="btnSendText" title="Send query">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Tool Call & MCP Debug Panel -->
+    <aside class="inspector-panel">
+      <div class="inspector-header">
+        <div class="inspector-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--alexa-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Tool Call Inspector
+        </div>
+        <span class="inspector-counter" id="toolCallCounter">0 Calls</span>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="inspector-mode-selector">
+        <div class="mode-label">Backend Execution Mode:</div>
+        <div class="mode-toggle-group">
+          <button class="mode-toggle-btn active" id="modeBtnRest">Flask REST + MCP</button>
+          <button class="mode-toggle-btn" id="modeBtnMcp">Direct MCP Stream</button>
+        </div>
+      </div>
+
+      <!-- Live Protocol Flow -->
+      <div class="protocol-flow">
+        <div class="flow-node highlight" id="flowUtterance">Voice In</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node highlight" id="flowAgent">Intent Match</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node" id="flowTool">MCP Tool</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node" id="flowSpeech">Speech Out</div>
+      </div>
+
+      <!-- Inspector Logs List -->
+      <div class="inspector-logs" id="inspectorLogs">
+        <div class="empty-logs" id="emptyLogsPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <div>No tool calls recorded yet.</div>
+          <div style="font-size: 0.74rem; color: var(--text-dim);">
+            Speak or type a command like <em>"What tasks are due?"</em> or <em>"Plan my evening"</em> to view live JSON-RPC tool dispatches.
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Settings Configuration Modal -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Simulator Configuration</h3>
+        <button class="modal-close" id="btnCloseSettings">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="cfgApiUrl">Flask REST API Base URL</label>
+          <input type="text" class="form-input" id="cfgApiUrl" value="http://localhost:5000" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cfgMcpUrl">MCP Server Endpoint (Streamable HTTP)</label>
+          <input type="text" class="form-input" id="cfgMcpUrl" value="http://localhost:8080/mcp" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cfgAuthToken">MCP Bearer Auth Token</label>
+          <input type="password" class="form-input" id="cfgAuthToken" value="campusmate-dev-token-xyz" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cfgStudentId">Student ID Context</label>
+          <input type="number" class="form-input" id="cfgStudentId" value="1" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cfgVoiceSelect">Alexa+ Spoken Voice</label>
+          <select class="form-select" id="cfgVoiceSelect">
+            <option value="">Default System Voice</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <button class="btn-secondary" id="btnAutoLogin" style="width: 100%; border-color: var(--alexa-blue);">
+            🔑 Auto-Login Demo Student (Alex Mercer)
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnResetSettings">Reset Defaults</button>
+        <button class="btn-primary" id="btnSaveSettings">Save & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Simulator Logic -->
+  <script>
+    /**
+     * CampusMate Alexa+ Simulator
+     * Dual Mode: Flask REST API Tool Integration + Direct MCP Streamable HTTP JSON-RPC
+     */
+
+    // Configuration state
+    const CONFIG = {
+      apiUrl: localStorage.getItem('cm_api_url') || 'http://localhost:5000',
+      mcpUrl: localStorage.getItem('cm_mcp_url') || 'http://localhost:8080/mcp',
+      authToken: localStorage.getItem('cm_auth_token') || 'campusmate-dev-token-xyz',
+      studentId: parseInt(localStorage.getItem('cm_student_id') || '1', 10),
+      speechEnabled: localStorage.getItem('cm_speech_enabled') !== 'false',
+      executionMode: localStorage.getItem('cm_exec_mode') || 'flask_rest', // 'flask_rest' or 'mcp_direct'
+      selectedVoiceUri: localStorage.getItem('cm_selected_voice') || ''
+    };
+
+    // Application state
+    let recognition = null;
+    let isListening = false;
+    let isProcessing = false;
+    let isSpeaking = false;
+    let toolCallCount = 0;
+    let pendingConfirmation = null; // Stored multi-turn state (e.g. asking for missing due date)
+    let availableVoices = [];
+
+    // DOM Elements
+    const alexaOrb = document.getElementById('alexaOrb');
+    const orbStatusLabel = document.getElementById('orbStatusLabel');
+    const btnMicInput = document.getElementById('btnMicInput');
+    const userInputText = document.getElementById('userInputText');
+    const btnSendText = document.getElementById('btnSendText');
+    const chatMessages = document.getElementById('chatMessages');
+    const inspectorLogs = document.getElementById('inspectorLogs');
+    const emptyLogsPlaceholder = document.getElementById('emptyLogsPlaceholder');
+    const toolCallCounter = document.getElementById('toolCallCounter');
+    const backendStatusBadge = document.getElementById('backendStatusBadge');
+    const backendStatusText = document.getElementById('backendStatusText');
+    const btnToggleSpeech = document.getElementById('btnToggleSpeech');
+    const speechToggleLabel = document.getElementById('speechToggleLabel');
+    const modeBtnRest = document.getElementById('modeBtnRest');
+    const modeBtnMcp = document.getElementById('modeBtnMcp');
+    const settingsModal = document.getElementById('settingsModal');
+    const btnSettings = document.getElementById('btnSettings');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+    const btnResetSettings = document.getElementById('btnResetSettings');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+    const btnAutoLogin = document.getElementById('btnAutoLogin');
+    const cfgVoiceSelect = document.getElementById('cfgVoiceSelect');
+
+    // Initialize Web Speech API
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('Web Speech API is not supported in this browser. Please use Chrome or Edge.', 'warning');
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isListening = true;
+        setOrbState('listening');
+        btnMicInput.classList.add('active');
+        orbStatusLabel.innerHTML = 'Listening to your voice...';
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        if (interimTranscript) {
+          orbStatusLabel.innerHTML = `Heard: <em>"${interimTranscript}"</em>`;
+        }
+
+        if (finalTranscript) {
+          userInputText.value = finalTranscript.trim();
+          handleUserUtterance(finalTranscript.trim());
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        isListening = false;
+        btnMicInput.classList.remove('active');
+        setOrbState('idle');
+        orbStatusLabel.innerHTML = 'Microphone standby. Click orb to retry.';
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        btnMicInput.classList.remove('active');
+        if (!isProcessing && !isSpeaking) {
+          setOrbState('idle');
+          orbStatusLabel.innerHTML = 'Click the orb or say <strong>"Hey Alexa"</strong>';
+        }
+      };
+    }
+
+    // Toggle Listening
+    function toggleListening() {
+      if (!recognition) {
+        initSpeechRecognition();
+        if (!recognition) return;
+      }
+
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+
+      if (isListening) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    // Populate Speech Synthesis Voices
+    function initSpeechSynthesis() {
+      if (!('speechSynthesis' in window)) return;
+
+      function updateVoiceList() {
+        availableVoices = window.speechSynthesis.getVoices();
+        cfgVoiceSelect.innerHTML = '<option value="">Default System Voice</option>';
+        availableVoices.forEach((voice) => {
+          const option = document.createElement('option');
+          option.value = voice.voiceURI;
+          option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' — DEFAULT' : ''}`;
+          if (voice.voiceURI === CONFIG.selectedVoiceUri) {
+            option.selected = true;
+          }
+          cfgVoiceSelect.appendChild(option);
+        });
+      }
+
+      updateVoiceList();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoiceList;
+      }
+    }
+
+    // Alexa Spoken Output via SpeechSynthesis
+    function speakText(text) {
+      if (!CONFIG.speechEnabled || !('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel(); // Stop any pending speech
+
+      // Clean text for speech (strip markdown, asterisks, brackets, hashes)
+      const cleanText = text
+        .replace(/[*#_`]/g, '')
+        .replace(/https?:\/\/\S+/g, 'link')
+        .replace(/\bCS\s*(\d{3})\b/gi, 'C S $1');
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      // Select voice if configured
+      if (CONFIG.selectedVoiceUri && availableVoices.length > 0) {
+        const found = availableVoices.find(v => v.voiceURI === CONFIG.selectedVoiceUri);
+        if (found) utterance.voice = found;
+      } else {
+        // Preferred female / smooth voices for Alexa persona
+        const preferred = availableVoices.find(v => 
+          /Google US English|Microsoft Zira|Samantha|Victoria|Jenny|en-US/i.test(v.name)
+        );
+        if (preferred) utterance.voice = preferred;
+      }
+
+      utterance.onstart = () => {
+        isSpeaking = true;
+        setOrbState('speaking');
+        orbStatusLabel.innerHTML = 'Alexa+ is speaking...';
+      };
+
+      utterance.onend = () => {
+        isSpeaking = false;
+        if (!isListening && !isProcessing) {
+          setOrbState('idle');
+          orbStatusLabel.innerHTML = 'Click the orb or say <strong>"Hey Alexa"</strong>';
+        }
+      };
+
+      utterance.onerror = () => {
+        isSpeaking = false;
+        setOrbState('idle');
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Orb State Manager
+    function setOrbState(state) {
+      alexaOrb.classList.remove('idle', 'listening', 'thinking', 'speaking');
+      alexaOrb.classList.add(state);
+    }
+
+    // Highlighting protocol flow node
+    function highlightFlowNode(nodeId) {
+      document.querySelectorAll('.protocol-flow .flow-node').forEach(n => n.classList.remove('highlight'));
+      const target = document.getElementById(nodeId);
+      if (target) target.classList.add('highlight');
+    }
+
+    /* -------------------------------------------------------------
+     * INTENT ENGINE & AGENT LOOP (Keyword Matching + Multi-Step)
+     * ------------------------------------------------------------- */
+
+    async function handleUserUtterance(rawUtterance) {
+      if (!rawUtterance || !rawUtterance.trim()) return;
+
+      const utterance = rawUtterance.trim();
+      userInputText.value = '';
+
+      // Append user message to transcript
+      appendChatMessage('user', utterance);
+
+      // Transition orb to thinking
+      isProcessing = true;
+      setOrbState('thinking');
+      orbStatusLabel.innerHTML = 'CampusMate is reasoning...';
+      highlightFlowNode('flowAgent');
+
+      // Check for pending multi-turn conversation
+      if (pendingConfirmation) {
+        await handlePendingTurn(utterance);
+        isProcessing = false;
+        return;
+      }
+
+      const lower = utterance.toLowerCase();
+
+      try {
+        // 1. Multi-step Intent: "Plan my evening" / "Plan my day"
+        if (lower.includes('plan my evening') || lower.includes('plan my day') || lower.includes('organize my evening')) {
+          await executePlanMyEvening();
+        }
+        // 2. Add task intent: "add task" / "new assignment" / "remind me to"
+        else if (lower.includes('add task') || lower.includes('new assignment') || lower.includes('create task') || lower.includes('remind me to')) {
+          await executeAddTask(utterance);
+        }
+        // 3. List tasks intent: "assignments" / "tasks" / "homework"
+        else if (lower.includes('assignment') || lower.includes('task') || lower.includes('homework') || lower.includes('todo')) {
+          await executeListTasks();
+        }
+        // 4. Attendance intent: "attendance" / "miss class"
+        else if (lower.includes('attendance') || lower.includes('bunk') || lower.includes('miss class')) {
+          await executeGetAttendance();
+        }
+        // 5. Schedule / Timetable intent: "schedule" / "timetable" / "classes"
+        else if (lower.includes('schedule') || lower.includes('timetable') || lower.includes('classes') || lower.includes('lecture')) {
+          await executeGetTimetable();
+        }
+        // 6. Study plan intent: "study plan" / "study schedule"
+        else if (lower.includes('study plan') || lower.includes('study schedule')) {
+          await executeGenerateStudyPlan();
+        }
+        // 7. Today / Briefing intent: "today" / "briefing" / "good morning" / "what's up"
+        else if (lower.includes('briefing') || lower.includes('good morning') || lower.includes("what's up") || lower.includes('today')) {
+          await executeDailyBriefing();
+        }
+        // 8. CGPA / GPA intent: "cgpa" / "gpa"
+        else if (lower.includes('cgpa') || lower.includes('gpa') || lower.includes('grades')) {
+          await executeCalculateCGPA();
+        }
+        // 9. Exams intent: "exams" / "tests" / "finals"
+        else if (lower.includes('exam') || lower.includes('midterm') || lower.includes('finals')) {
+          await executeListExams();
+        }
+        // 10. Dashboard intent: "dashboard" / "overview"
+        else if (lower.includes('dashboard') || lower.includes('overview') || lower.includes('summary')) {
+          await executeGetDashboard();
+        }
+        // 11. FAQ search intent: "faq" / "question" / campus policies (hostel, library, curfew, grading)
+        else if (lower.includes('faq') || lower.includes('policy') || lower.includes('curfew') || lower.includes('hostel') || lower.includes('library') || lower.includes('rule')) {
+          await executeSearchFAQ(utterance);
+        }
+        // Fallback: General FAQ / Assistant search
+        else {
+          await executeSearchFAQ(utterance);
+        }
+      } catch (err) {
+        console.error('Agent loop execution error:', err);
+        const errorMsg = `I ran into an issue connecting to the backend services. ${err.message || ''}`;
+        appendChatMessage('assistant', errorMsg);
+        speakText(errorMsg);
+      } finally {
+        isProcessing = false;
+        highlightFlowNode('flowSpeech');
+        if (!isSpeaking) {
+          setOrbState('idle');
+          orbStatusLabel.innerHTML = 'Click the orb or say <strong>"Hey Alexa"</strong>';
+        }
+      }
+    }
+
+    /* -------------------------------------------------------------
+     * TOOL CALL IMPLEMENTATIONS
+     * ------------------------------------------------------------- */
+
+    // Tool: Daily Briefing
+    async function executeDailyBriefing() {
+      const toolName = 'daily_briefing';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const result = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/todayReminder`,
+        restMethod: 'GET',
+        mcpMethod: 'todayReminder'
+      });
+
+      const classes = result.classes || [];
+      const pendingTasks = result.assignments || [];
+      const day = result.day || 'Today';
+
+      let speech = `Good day Alex! For ${day}, you have ${classes.length} lectures scheduled`;
+      if (classes.length > 0) {
+        speech += `, starting with ${classes[0].name} at ${classes[0].start_time} in ${classes[0].room}`;
+      }
+      speech += `. You have ${pendingTasks.length} pending assignments.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>📅 ${day}'s Academic Agenda</span>
+            <span class="item-tag good">${classes.length} Classes</span>
+          </div>
+          <div class="rich-list">
+            ${classes.map(c => `
+              <div class="rich-list-item">
+                <span><strong>${c.name}</strong> (${c.code})</span>
+                <span style="color: var(--alexa-cyan);">${c.start_time} - ${c.end_time} &bull; ${c.room}</span>
+              </div>
+            `).join('')}
+            ${classes.length === 0 ? '<div style="font-size: 0.8rem; color: var(--text-dim);">No classes scheduled for today!</div>' : ''}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return result;
+    }
+
+    // Tool: List Tasks
+    async function executeListTasks() {
+      const toolName = 'list_tasks';
+      const mcpArgs = { student_id: CONFIG.studentId, status: 'Pending' };
+      highlightFlowNode('flowTool');
+
+      const tasks = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/tasks/?status=Pending`,
+        restMethod: 'GET',
+        mcpMethod: 'getAssignments'
+      });
+
+      const taskList = Array.isArray(tasks) ? tasks : (tasks.tasks || []);
+
+      let speech = '';
+      if (!taskList || taskList.length === 0) {
+        speech = 'You have no pending assignments right now. You are all caught up!';
+      } else {
+        const topTasks = taskList.slice(0, 3).map(t => `${t.title} due on ${t.due_date}`).join(', and ');
+        speech = `You have ${taskList.length} pending assignments: ${topTasks}.`;
+      }
+
+      let cardHtml = '';
+      if (taskList && taskList.length > 0) {
+        cardHtml = `
+          <div class="rich-card">
+            <div class="rich-card-title">
+              <span>📝 Pending Assignments</span>
+              <span class="item-tag urgent">${taskList.length} Tasks</span>
+            </div>
+            <div class="rich-list">
+              ${taskList.map(t => `
+                <div class="rich-list-item">
+                  <div>
+                    <strong>#${t.id} ${t.title}</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-dim);">${t.subject_code || 'General'} &bull; Due: ${t.due_date}</div>
+                  </div>
+                  <span class="item-tag ${t.priority === 'High' ? 'urgent' : (t.priority === 'Medium' ? 'warning' : 'good')}">${t.priority || 'Normal'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return taskList;
+    }
+
+    // Tool: Add Task (with date parsing & missing date prompting)
+    async function executeAddTask(utterance) {
+      const toolName = 'add_task';
+      
+      // Regex parsing for title and date
+      const text = utterance.replace(/^(hey alexa|alexa|campusmate)[\s,]*/i, '').trim();
+      const match = text.match(/(?:add task|new assignment|create task|remind me to)\s+(.+)/i);
+      const rawContent = match ? match[1].trim() : text;
+
+      // Check for dates like YYYY-MM-DD or tomorrow or today
+      const dateMatch = rawContent.match(/\b(\d{4}-\d{2}-\d{2}|tomorrow|today)\b/i);
+      let dueDate = null;
+      let title = rawContent;
+
+      if (dateMatch) {
+        const dStr = dateMatch[1].toLowerCase();
+        const today = new Date();
+        if (dStr === 'tomorrow') {
+          const tom = new Date(today);
+          tom.setDate(tom.getDate() + 1);
+          dueDate = tom.toISOString().split('T')[0];
+        } else if (dStr === 'today') {
+          dueDate = today.toISOString().split('T')[0];
+        } else {
+          dueDate = dStr;
+        }
+        title = rawContent.replace(/\b(due|on|by)?\s*(\d{4}-\d{2}-\d{2}|tomorrow|today)\b/ig, '').trim();
+      }
+
+      // If due date missing: multi-turn prompt!
+      if (!dueDate) {
+        pendingConfirmation = {
+          action: 'add_task',
+          title: title || 'New Task'
+        };
+        const promptSpeech = `What is the due date for "${title}"? You can say "tomorrow" or provide a date like 2026-10-25.`;
+        
+        let cardHtml = `
+          <div class="rich-card">
+            <div class="rich-card-title">
+              <span>📅 Specify Due Date Needed</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+              Click a quick option or speak the date:
+            </p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="chip-btn" onclick="submitQuickDate('tomorrow')">Tomorrow</button>
+              <button class="chip-btn" onclick="submitQuickDate('today')">Today</button>
+              <button class="chip-btn" onclick="submitQuickDate('2026-10-28')">Next Week</button>
+            </div>
+          </div>
+        `;
+
+        appendChatMessage('assistant', promptSpeech, 'add_task_prompt', cardHtml);
+        speakText(promptSpeech);
+        return;
+      }
+
+      // Execute tool
+      const mcpArgs = {
+        student_id: CONFIG.studentId,
+        title: title,
+        due_date: dueDate,
+        priority: 'Medium'
+      };
+
+      highlightFlowNode('flowTool');
+
+      const res = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/tasks/`,
+        restMethod: 'POST',
+        restBody: { title: title, due_date: dueDate, priority: 'Medium' },
+        mcpMethod: 'addAssignment'
+      });
+
+      const speech = `I have added the assignment "${title}" due on ${dueDate}.`;
+      appendChatMessage('assistant', speech, toolName);
+      speakText(speech);
+    }
+
+    // Helper to resolve pending date from button click
+    window.submitQuickDate = function(dateStr) {
+      userInputText.value = dateStr;
+      handleUserUtterance(dateStr);
+    };
+
+    // Multi-turn handler
+    async function handlePendingTurn(reply) {
+      if (pendingConfirmation && pendingConfirmation.action === 'add_task') {
+        const title = pendingConfirmation.title;
+        pendingConfirmation = null;
+
+        let dueDate = null;
+        const dStr = reply.toLowerCase().trim();
+        const today = new Date();
+        if (dStr === 'tomorrow') {
+          const tom = new Date(today);
+          tom.setDate(tom.getDate() + 1);
+          dueDate = tom.toISOString().split('T')[0];
+        } else if (dStr === 'today') {
+          dueDate = today.toISOString().split('T')[0];
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
+          dueDate = dStr;
+        } else {
+          // Default fallback to 3 days ahead
+          const f = new Date(today);
+          f.setDate(f.getDate() + 3);
+          dueDate = f.toISOString().split('T')[0];
+        }
+
+        const mcpArgs = {
+          student_id: CONFIG.studentId,
+          title: title,
+          due_date: dueDate,
+          priority: 'Medium'
+        };
+
+        const res = await invokeToolDispatcher('add_task', mcpArgs, {
+          restPath: `/api/tasks/`,
+          restMethod: 'POST',
+          restBody: { title: title, due_date: dueDate, priority: 'Medium' },
+          mcpMethod: 'addAssignment'
+        });
+
+        const speech = `Got it. Added "${title}" due on ${dueDate}.`;
+        appendChatMessage('assistant', speech, 'add_task');
+        speakText(speech);
+      }
+    }
+
+    // Tool: Get Attendance Summary
+    async function executeGetAttendance() {
+      const toolName = 'get_attendance_summary';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const attendanceList = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/calculateAttendance`,
+        restMethod: 'GET',
+        mcpMethod: 'calculateAttendance'
+      });
+
+      const list = Array.isArray(attendanceList) ? attendanceList : [];
+      const lowAttendance = list.filter(a => a.percentage < 75);
+      const overallAvg = list.length > 0 ? (list.reduce((acc, a) => acc + a.percentage, 0) / list.length).toFixed(1) : 85;
+
+      let speech = '';
+      if (lowAttendance.length > 0) {
+        const target = lowAttendance[0];
+        speech = `Warning Alex: Your attendance in ${target.name} is at ${target.percentage}%, which is below the 75% cutoff. You need to attend ${target.classes_needed_for_75 || 3} consecutive classes.`;
+      } else {
+        speech = `Your attendance is looking strong at an overall average of ${overallAvg}%. All enrolled subjects are safely above 75%.`;
+      }
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>📊 Enrolled Course Attendance</span>
+            <span class="item-tag ${overallAvg >= 75 ? 'good' : 'urgent'}">${overallAvg}% Avg</span>
+          </div>
+          <div class="rich-list">
+            ${list.map(a => `
+              <div style="margin-bottom: 0.4rem;">
+                <div class="rich-list-item">
+                  <span><strong>${a.code}</strong> - ${a.name}</span>
+                  <span class="item-tag ${a.percentage >= 75 ? 'good' : 'urgent'}">${a.percentage}% (${a.attended}/${a.total_classes})</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: ${Math.min(a.percentage, 100)}%; background: ${a.percentage >= 75 ? 'var(--alexa-emerald)' : 'var(--alexa-pink)'};"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return list;
+    }
+
+    // Tool: Get Timetable
+    async function executeGetTimetable() {
+      const toolName = 'get_timetable';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const timetable = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/getTimetable`,
+        restMethod: 'GET',
+        mcpMethod: 'getTimetable'
+      });
+
+      const classes = Array.isArray(timetable) ? timetable : [];
+      let speech = '';
+      if (classes.length === 0) {
+        speech = 'You have no scheduled classes on your calendar.';
+      } else {
+        const firstTwo = classes.slice(0, 2).map(c => `${c.name || c.code} at ${c.start_time}`).join(' and ');
+        speech = `You have ${classes.length} scheduled sessions, including ${firstTwo}.`;
+      }
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>📅 Class Timetable</span>
+            <span class="item-tag good">${classes.length} Slots</span>
+          </div>
+          <div class="rich-list">
+            ${classes.map(c => `
+              <div class="rich-list-item">
+                <div>
+                  <strong>${c.code}</strong> &bull; ${c.name || 'Lecture'}
+                  <div style="font-size: 0.72rem; color: var(--text-dim);">${c.day_of_week || 'Today'} &bull; Room: ${c.room || 'LH-101'}</div>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--alexa-cyan); font-family: var(--font-mono);">${c.start_time} - ${c.end_time}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return classes;
+    }
+
+    // Tool: Generate Study Plan
+    async function executeGenerateStudyPlan() {
+      const toolName = 'generate_study_plan';
+      const mcpArgs = { student_id: CONFIG.studentId, daily_hours: 3.0 };
+      highlightFlowNode('flowTool');
+
+      const plan = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/agents/planner`,
+        restMethod: 'POST',
+        restBody: { daily_hours: 3.0 },
+        mcpMethod: 'createStudyPlan'
+      });
+
+      const slots = plan.slots || plan.study_slots || plan.schedule || [];
+      const speech = `I have generated a personalized study plan for you today with ${slots.length} focused study sessions, prioritized based on exam dates and course difficulty.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>🧠 Optimized Study Plan</span>
+            <span class="item-tag good">${slots.length} Sessions</span>
+          </div>
+          <div class="rich-list">
+            ${slots.map(s => `
+              <div class="rich-list-item">
+                <div>
+                  <strong>${s.code || s.subject_code}</strong>: ${s.topic || 'Core Concept Review'}
+                  <div style="font-size: 0.72rem; color: var(--text-dim);">${s.date || 'Today'}</div>
+                </div>
+                <span class="item-tag warning">${s.start_time || '18:00'} - ${s.end_time || '19:30'}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return plan;
+    }
+
+    // Multi-Step Agent Chaining: "Plan my evening" / "Plan my day"
+    async function executePlanMyEvening() {
+      showToast('Executing Multi-Step Alexa+ Agent Chain...', 'info');
+
+      // Step 1: Daily Briefing
+      const briefing = await invokeToolDispatcher('daily_briefing', { student_id: CONFIG.studentId }, {
+        restPath: `/api/mcp/todayReminder`,
+        restMethod: 'GET',
+        mcpMethod: 'todayReminder',
+        multiStep: 'Step 1 of 3: Fetching Agenda'
+      });
+
+      // Step 2: List Tasks
+      const tasks = await invokeToolDispatcher('list_tasks', { student_id: CONFIG.studentId, status: 'Pending' }, {
+        restPath: `/api/tasks/?status=Pending`,
+        restMethod: 'GET',
+        mcpMethod: 'getAssignments',
+        multiStep: 'Step 2 of 3: Prioritizing Tasks'
+      });
+
+      // Step 3: Generate Study Plan
+      const studyPlan = await invokeToolDispatcher('generate_study_plan', { student_id: CONFIG.studentId, daily_hours: 3.0 }, {
+        restPath: `/api/agents/planner`,
+        restMethod: 'POST',
+        restBody: { daily_hours: 3.0 },
+        mcpMethod: 'createStudyPlan',
+        multiStep: 'Step 3 of 3: Synthesizing Study Schedule'
+      });
+
+      const taskList = Array.isArray(tasks) ? tasks : (tasks.tasks || []);
+      const slots = studyPlan.slots || studyPlan.study_slots || [
+        { code: 'CS102', topic: 'Binary Search Trees & Graphs', start_time: '18:00', end_time: '19:30' },
+        { code: 'CS104', topic: 'SQL Joins & Relational Algebra', start_time: '20:00', end_time: '21:30' }
+      ];
+
+      const speech = `Here is your evening plan, Alex: You have finished today's lectures. You have ${taskList.length} pending assignments. I have scheduled two focused study blocks starting at 6 PM for Data Structures, followed by Database Systems at 8 PM.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>🌙 Multi-Step Evening Action Plan</span>
+            <span class="item-tag special-plan">3 Tools Chained</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.6rem;">
+            Synthesized by chaining <strong>daily_briefing</strong>, <strong>list_tasks</strong>, and <strong>generate_study_plan</strong>:
+          </p>
+          <div class="rich-list">
+            ${slots.map(s => `
+              <div class="rich-list-item">
+                <div>
+                  <strong>${s.code}</strong> &bull; ${s.topic}
+                </div>
+                <span class="item-tag warning">${s.start_time} - ${s.end_time}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, 'multi_step_planner', cardHtml);
+      speakText(speech);
+    }
+
+    // Tool: Calculate CGPA
+    async function executeCalculateCGPA() {
+      const toolName = 'calculate_cgpa';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const cgpaData = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/calculateCGPA`,
+        restMethod: 'GET',
+        mcpMethod: 'calculateCGPA'
+      });
+
+      const cgpa = cgpaData.current_cgpa || 3.82;
+      const speech = `Your current cumulative grade point average is ${cgpa} across completed semesters. You are in excellent academic standing.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>🎓 Academic Standing</span>
+            <span class="item-tag good">CGPA: ${cgpa} / 4.0</span>
+          </div>
+          <div class="rich-list">
+            <div class="rich-list-item">
+              <span>Current CGPA</span>
+              <strong style="color: var(--alexa-cyan);">${cgpa}</strong>
+            </div>
+            <div class="rich-list-item">
+              <span>Projected Semester GPA</span>
+              <strong style="color: var(--alexa-emerald);">${cgpaData.projected_cgpa || cgpa}</strong>
+            </div>
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return cgpaData;
+    }
+
+    // Tool: List Exams
+    async function executeListExams() {
+      const toolName = 'list_exams';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const exams = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/exams/`,
+        restMethod: 'GET',
+        mcpMethod: 'list_exams'
+      });
+
+      const examList = Array.isArray(exams) ? exams : (exams.exams || [
+        { code: 'CS102', title: 'Data Structures Midterm', exam_date: '2026-11-15' },
+        { code: 'CS104', title: 'Database Systems Final', exam_date: '2026-12-05' }
+      ]);
+
+      const speech = `You have ${examList.length} upcoming examinations recorded on your schedule.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>📑 Upcoming Exams</span>
+            <span class="item-tag urgent">${examList.length} Scheduled</span>
+          </div>
+          <div class="rich-list">
+            ${examList.map(e => `
+              <div class="rich-list-item">
+                <div>
+                  <strong>${e.title}</strong> (${e.subject_code || e.code || 'CS'})
+                  <div style="font-size: 0.72rem; color: var(--text-dim);">Date: ${e.exam_date}</div>
+                </div>
+                <span class="item-tag warning">${e.exam_date}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return examList;
+    }
+
+    // Tool: Get Dashboard Overview
+    async function executeGetDashboard() {
+      const toolName = 'get_dashboard';
+      const mcpArgs = { student_id: CONFIG.studentId };
+      highlightFlowNode('flowTool');
+
+      const dash = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/getDashboard`,
+        restMethod: 'GET',
+        mcpMethod: 'getDashboard'
+      });
+
+      const speech = `Here is your academic dashboard: CGPA is ${dash.cgpa || 3.82}, overall attendance is ${dash.attendance_percentage || 76}%, and you have ${dash.pending_assignments_count || 3} pending tasks.`;
+
+      let cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>📊 Academic Overview</span>
+          </div>
+          <div class="rich-list">
+            <div class="rich-list-item">
+              <span>Student</span>
+              <strong>${dash.student_name || 'Alex Mercer'} (${dash.matric_number || 'CS-2026-0891'})</strong>
+            </div>
+            <div class="rich-list-item">
+              <span>Cumulative GPA</span>
+              <strong style="color: var(--alexa-cyan);">${dash.cgpa || 3.82}</strong>
+            </div>
+            <div class="rich-list-item">
+              <span>Average Attendance</span>
+              <strong style="color: var(--alexa-emerald);">${dash.attendance_percentage || 76}%</strong>
+            </div>
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return dash;
+    }
+
+    // Tool: Search FAQ
+    async function executeSearchFAQ(query) {
+      const toolName = 'search_faq';
+      const mcpArgs = { student_id: CONFIG.studentId, query: query };
+      highlightFlowNode('flowTool');
+
+      const res = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/mcp/searchFAQ?query=${encodeURIComponent(query)}`,
+        restMethod: 'GET',
+        mcpMethod: 'searchFAQ'
+      });
+
+      const results = Array.isArray(res) ? res : (res.results || []);
+      let speech = '';
+      let bestItem = null;
+
+      if (results.length > 0) {
+        bestItem = results[0];
+        speech = bestItem.answer;
+      } else {
+        speech = "I searched campus policies for your query. For official procedures, please visit the Academic Affairs office or Student Portal.";
+      }
+
+      let cardHtml = '';
+      if (bestItem) {
+        cardHtml = `
+          <div class="rich-card">
+            <div class="rich-card-title">
+              <span>❓ ${bestItem.question || 'Campus Policy FAQ'}</span>
+              <span class="item-tag good">Knowledge Base</span>
+            </div>
+            <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
+              ${bestItem.answer}
+            </p>
+          </div>
+        `;
+      }
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return results;
+    }
+
+    /* -------------------------------------------------------------
+     * UNIVERSAL MCP TOOL DISPATCHER (FLASK REST / DIRECT MCP / MOCK)
+     * ------------------------------------------------------------- */
+
+    async function invokeToolDispatcher(toolName, args, options) {
+      const startTime = performance.now();
+      let responseData = null;
+      let error = null;
+      let transportUsed = 'Flask REST';
+
+      try {
+        if (CONFIG.executionMode === 'mcp_direct') {
+          // Direct MCP Streamable HTTP JSON-RPC Call
+          transportUsed = 'MCP Streamable HTTP';
+          const rpcPayload = {
+            jsonrpc: '2.0',
+            id: ++toolCallCount,
+            method: 'tools/call',
+            params: {
+              name: options.mcpMethod || toolName,
+              arguments: args
+            }
+          };
+
+          const mcpResponse = await fetch(CONFIG.mcpUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${CONFIG.authToken}`
+            },
+            body: JSON.stringify(rpcPayload)
+          });
+
+          if (!mcpResponse.ok) {
+            throw new Error(`MCP Server returned HTTP ${mcpResponse.status}`);
+          }
+          const jsonRpcRes = await mcpResponse.json();
+          responseData = jsonRpcRes.result ? (jsonRpcRes.result.content || jsonRpcRes.result) : jsonRpcRes;
+        } else {
+          // Default: Flask REST API endpoint
+          transportUsed = 'Flask REST API';
+          const url = `${CONFIG.apiUrl}${options.restPath}`;
+          const fetchOpts = {
+            method: options.restMethod || 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Sends session cookies if logged in
+          };
+
+          if (options.restBody) {
+            fetchOpts.body = JSON.stringify(options.restBody);
+          }
+
+          const res = await fetch(url, fetchOpts);
+          if (!res.ok) {
+            throw new Error(`REST endpoint ${options.restPath} returned HTTP ${res.status}`);
+          }
+          responseData = await res.json();
+        }
+      } catch (err) {
+        console.warn(`Real HTTP call failed (${err.message}). Falling back to local offline simulation.`, err);
+        // Fallback to high-fidelity mock data matching seeded Alex Mercer database
+        responseData = generateMockFallback(toolName, args);
+        transportUsed += ' (Simulated Offline)';
+      }
+
+      const elapsedMs = Math.round(performance.now() - startTime);
+
+      // Record call in Inspector Debug Panel
+      recordToolCallInInspector({
+        toolName: toolName,
+        mcpMethodEquivalent: options.mcpMethod || toolName,
+        transport: transportUsed,
+        args: args,
+        result: responseData,
+        elapsedMs: elapsedMs,
+        multiStep: options.multiStep
+      });
+
+      return responseData;
+    }
+
+    // High-fidelity fallback mock generator matching seeded database
+    function generateMockFallback(toolName, args) {
+      if (toolName === 'daily_briefing' || toolName === 'todayReminder') {
+        return {
+          day: 'Wednesday',
+          classes: [
+            { code: 'CS105', name: 'Software Engineering Principles', start_time: '10:00', end_time: '11:30', room: 'LH-105' },
+            { code: 'CS101', name: 'Introduction to Programming', start_time: '13:00', end_time: '14:30', room: 'LH-101' }
+          ],
+          assignments: [
+            { id: 1, title: 'Data Structures Lab 3: Graphs', due_date: '2026-10-20', priority: 'High' },
+            { id: 2, title: 'Database Normalization Homework', due_date: '2026-10-22', priority: 'Medium' }
+          ]
+        };
+      } else if (toolName === 'list_tasks' || toolName === 'getAssignments') {
+        return [
+          { id: 1, title: 'Data Structures Lab 3: Graphs', subject_code: 'CS102', due_date: '2026-10-20', priority: 'High', status: 'Pending' },
+          { id: 2, title: 'Database Normalization Homework', subject_code: 'CS104', due_date: '2026-10-22', priority: 'Medium', status: 'Pending' },
+          { id: 3, title: 'Software Engineering Sprint Review', subject_code: 'CS105', due_date: '2026-10-25', priority: 'Low', status: 'Pending' }
+        ];
+      } else if (toolName === 'add_task' || toolName === 'addAssignment') {
+        return { id: 99, title: args.title, due_date: args.due_date, message: 'Assignment created successfully.' };
+      } else if (toolName === 'get_attendance_summary' || toolName === 'calculateAttendance') {
+        return [
+          { code: 'CS101', name: 'Introduction to Programming', percentage: 90.0, attended: 9, total_classes: 10, classes_needed_for_75: 0 },
+          { code: 'CS102', name: 'Data Structures & Algorithms', percentage: 80.0, attended: 8, total_classes: 10, classes_needed_for_75: 0 },
+          { code: 'CS103', name: 'Discrete Mathematics', percentage: 100.0, attended: 10, total_classes: 10, classes_needed_for_75: 0 },
+          { code: 'CS104', name: 'Database Management Systems', percentage: 60.0, attended: 6, total_classes: 10, classes_needed_for_75: 4 },
+          { code: 'CS105', name: 'Software Engineering Principles', percentage: 50.0, attended: 5, total_classes: 10, classes_needed_for_75: 5 }
+        ];
+      } else if (toolName === 'get_timetable' || toolName === 'getTimetable') {
+        return [
+          { code: 'CS101', name: 'Introduction to Programming', day_of_week: 'Wednesday', start_time: '13:00', end_time: '14:30', room: 'LH-101' },
+          { code: 'CS105', name: 'Software Engineering Principles', day_of_week: 'Wednesday', start_time: '10:00', end_time: '11:30', room: 'LH-105' },
+          { code: 'CS102', name: 'Data Structures & Algorithms', day_of_week: 'Thursday', start_time: '11:00', end_time: '12:30', room: 'Lab-2' },
+          { code: 'CS104', name: 'Database Management Systems', day_of_week: 'Thursday', start_time: '14:00', end_time: '15:30', room: 'LH-104' }
+        ];
+      } else if (toolName === 'generate_study_plan' || toolName === 'createStudyPlan') {
+        return {
+          student_id: args.student_id,
+          slots: [
+            { code: 'CS102', topic: 'Binary Search Trees & Red-Black Balancing', date: '2026-10-18', start_time: '18:00', end_time: '19:30' },
+            { code: 'CS104', topic: 'SQL Query Optimization and Indexing', date: '2026-10-18', start_time: '20:00', end_time: '21:30' }
+          ]
+        };
+      } else if (toolName === 'calculate_cgpa' || toolName === 'calculateCGPA') {
+        return { current_cgpa: 3.82, semester_gpa: 3.90, projected_cgpa: 3.84, total_credits: 16 };
+      } else if (toolName === 'list_exams') {
+        return [
+          { subject_code: 'CS102', title: 'Data Structures Midterm Examination', exam_date: '2026-11-15', notes: 'Chapters 1-5' },
+          { subject_code: 'CS104', title: 'Database Systems Midterm Examination', exam_date: '2026-11-20', notes: 'ER Diagrams and SQL' }
+        ];
+      } else if (toolName === 'get_dashboard' || toolName === 'getDashboard') {
+        return {
+          student_name: 'Alex Mercer',
+          matric_number: 'CS-2026-0891',
+          current_semester: 4,
+          cgpa: 3.82,
+          attendance_percentage: 76.0,
+          pending_assignments_count: 3
+        };
+      } else if (toolName === 'search_faq' || toolName === 'searchFAQ') {
+        return [
+          {
+            question: 'What is the hostel curfew and night-out policy?',
+            answer: 'Hostel main gates close promptly at 10:30 PM on weekdays and 11:00 PM on weekends. Late entries require an authorized pass from the Warden.'
+          }
+        ];
+      }
+      return { success: true, message: 'Tool executed successfully.' };
+    }
+
+    /* -------------------------------------------------------------
+     * UI RENDERING & INSPECTOR LOGS
+     * ------------------------------------------------------------- */
+
+    function appendChatMessage(role, text, toolBadge, cardHtml) {
+      const group = document.createElement('div');
+      group.className = `msg-group ${role}`;
+
+      const author = document.createElement('span');
+      author.className = 'msg-author';
+      author.textContent = role === 'user' ? 'You' : 'Alexa+ · CampusMate';
+      group.appendChild(author);
+
+      const bubble = document.createElement('div');
+      bubble.className = `msg-bubble ${role}`;
+      bubble.innerHTML = text;
+
+      if (toolBadge) {
+        const badge = document.createElement('div');
+        badge.className = 'action-badge';
+        badge.innerHTML = `
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          mcp::${toolBadge}
+        `;
+        bubble.appendChild(badge);
+      }
+
+      if (cardHtml) {
+        bubble.insertAdjacentHTML('beforeend', cardHtml);
+      }
+
+      group.appendChild(bubble);
+      chatMessages.appendChild(group);
+
+      // Auto-scroll
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function recordToolCallInInspector(call) {
+      if (emptyLogsPlaceholder) {
+        emptyLogsPlaceholder.style.display = 'none';
+      }
+
+      toolCallCount++;
+      toolCallCounter.textContent = `${toolCallCount} Call${toolCallCount > 1 ? 's' : ''}`;
+
+      const card = document.createElement('div');
+      card.className = `tool-call-card ${call.multiStep ? 'multi-step' : ''}`;
+
+      const headerId = `tool_hdr_${toolCallCount}`;
+      const bodyId = `tool_bdy_${toolCallCount}`;
+
+      card.innerHTML = `
+        <div class="tool-call-header" onclick="toggleToolCard('${bodyId}')">
+          <div class="tool-call-name-group">
+            <span class="tool-status-dot"></span>
+            <span class="tool-call-name">${call.toolName}</span>
+            ${call.multiStep ? `<span class="tool-step-badge">${call.multiStep}</span>` : ''}
+          </div>
+          <div class="tool-call-meta">
+            <span class="tool-latency">${call.elapsedMs}ms</span>
+            <span style="font-size: 0.7rem; color: var(--text-dim);">&bull; ${call.transport}</span>
+          </div>
+        </div>
+        <div class="tool-call-body" id="${bodyId}">
+          <div>
+            <div class="code-block-label">
+              <span>Arguments (MCP Schema)</span>
+              <span style="color: var(--alexa-cyan); font-family: var(--font-mono); font-size: 0.65rem;">student_id: ${call.args.student_id}</span>
+            </div>
+            <pre class="code-box">${escapeHtml(JSON.stringify(call.args, null, 2))}</pre>
+          </div>
+          <div>
+            <div class="code-block-label">
+              <span>Result Output</span>
+              <span style="color: #34d399; font-family: var(--font-mono); font-size: 0.65rem;">200 OK</span>
+            </div>
+            <pre class="code-box">${escapeHtml(JSON.stringify(call.result, null, 2))}</pre>
+          </div>
+        </div>
+      `;
+
+      inspectorLogs.prepend(card);
+    }
+
+    window.toggleToolCard = function(bodyId) {
+      const el = document.getElementById(bodyId);
+      if (el) {
+        el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+      }
+    };
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      if (type === 'warning') toast.style.borderLeftColor = 'var(--alexa-amber)';
+      if (type === 'error') toast.style.borderLeftColor = 'var(--alexa-pink)';
+      document.getElementById('toastContainer').appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    // Ping Backend Connection Status
+    async function checkBackendConnection() {
+      try {
+        const res = await fetch(`${CONFIG.apiUrl}/api/auth/status`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            backendStatusText.textContent = `Connected (${data.user.username})`;
+          } else {
+            backendStatusText.textContent = `Flask Connected (5000)`;
+          }
+          backendStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        } else {
+          backendStatusText.textContent = `Flask Standby`;
+        }
+      } catch (e) {
+        backendStatusText.textContent = `Offline Demo Mode`;
+        backendStatusBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        document.querySelector('.status-dot').style.background = '#f59e0b';
+      }
+    }
+
+    // Auto-login Helper
+    async function performDemoLogin() {
+      try {
+        const res = await fetch(`${CONFIG.apiUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username: 'student', password: 'password123' })
+        });
+        if (res.ok) {
+          showToast('Logged in successfully as Alex Mercer (student)!', 'info');
+          checkBackendConnection();
+        } else {
+          showToast('Could not reach Flask login endpoint. Is port 5000 running?', 'warning');
+        }
+      } catch (e) {
+        showToast('Login request failed. Running in standalone simulator mode.', 'warning');
+      }
+    }
+
+    /* -------------------------------------------------------------
+     * EVENT LISTENERS & INITIALIZATION
+     * ------------------------------------------------------------- */
+
+    // Orb click -> Toggle mic
+    alexaOrb.addEventListener('click', () => {
+      toggleListening();
+    });
+
+    // Mic button dock -> Toggle mic
+    btnMicInput.addEventListener('click', () => {
+      toggleListening();
+    });
+
+    // Send button click
+    btnSendText.addEventListener('click', () => {
+      handleUserUtterance(userInputText.value);
+    });
+
+    // Enter key in text input
+    userInputText.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        handleUserUtterance(userInputText.value);
+      }
+    });
+
+    // Suggestion chips click
+    document.querySelectorAll('.chip-btn[data-utterance]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const utterance = btn.getAttribute('data-utterance');
+        userInputText.value = utterance;
+        handleUserUtterance(utterance);
+      });
+    });
+
+    // Toggle speech audio playback
+    btnToggleSpeech.addEventListener('click', () => {
+      CONFIG.speechEnabled = !CONFIG.speechEnabled;
+      localStorage.setItem('cm_speech_enabled', CONFIG.speechEnabled);
+      if (!CONFIG.speechEnabled && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      speechToggleLabel.textContent = CONFIG.speechEnabled ? 'Audio On' : 'Audio Muted';
+      btnToggleSpeech.classList.toggle('active', CONFIG.speechEnabled);
+      showToast(CONFIG.speechEnabled ? 'Spoken speech enabled' : 'Spoken speech muted', 'info');
+    });
+
+    // Mode Selector Buttons
+    modeBtnRest.addEventListener('click', () => {
+      CONFIG.executionMode = 'flask_rest';
+      localStorage.setItem('cm_exec_mode', 'flask_rest');
+      modeBtnRest.classList.add('active');
+      modeBtnMcp.classList.remove('active');
+      showToast('Switched to Flask REST API + MCP Mirroring', 'info');
+    });
+
+    modeBtnMcp.addEventListener('click', () => {
+      CONFIG.executionMode = 'mcp_direct';
+      localStorage.setItem('cm_exec_mode', 'mcp_direct');
+      modeBtnMcp.classList.add('active');
+      modeBtnRest.classList.remove('active');
+      showToast('Switched to Direct MCP Streamable HTTP', 'info');
+    });
+
+    // Clear history
+    btnClearHistory.addEventListener('click', () => {
+      chatMessages.innerHTML = '';
+      appendChatMessage('assistant', 'Conversation transcript cleared. How can I help you, Alex?');
+      showToast('Transcript cleared', 'info');
+    });
+
+    // Settings Modal Open/Close
+    btnSettings.addEventListener('click', () => {
+      document.getElementById('cfgApiUrl').value = CONFIG.apiUrl;
+      document.getElementById('cfgMcpUrl').value = CONFIG.mcpUrl;
+      document.getElementById('cfgAuthToken').value = CONFIG.authToken;
+      document.getElementById('cfgStudentId').value = CONFIG.studentId;
+      settingsModal.classList.add('open');
+    });
+
+    btnCloseSettings.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.remove('open');
+      }
+    });
+
+    btnSaveSettings.addEventListener('click', () => {
+      CONFIG.apiUrl = document.getElementById('cfgApiUrl').value.trim();
+      CONFIG.mcpUrl = document.getElementById('cfgMcpUrl').value.trim();
+      CONFIG.authToken = document.getElementById('cfgAuthToken').value.trim();
+      CONFIG.studentId = parseInt(document.getElementById('cfgStudentId').value.trim(), 10) || 1;
+      CONFIG.selectedVoiceUri = cfgVoiceSelect.value;
+
+      localStorage.setItem('cm_api_url', CONFIG.apiUrl);
+      localStorage.setItem('cm_mcp_url', CONFIG.mcpUrl);
+      localStorage.setItem('cm_auth_token', CONFIG.authToken);
+      localStorage.setItem('cm_student_id', CONFIG.studentId);
+      localStorage.setItem('cm_selected_voice', CONFIG.selectedVoiceUri);
+
+      settingsModal.classList.remove('open');
+      showToast('Configuration saved successfully!', 'info');
+      checkBackendConnection();
+    });
+
+    btnResetSettings.addEventListener('click', () => {
+      document.getElementById('cfgApiUrl').value = 'http://localhost:5000';
+      document.getElementById('cfgMcpUrl').value = 'http://localhost:8080/mcp';
+      document.getElementById('cfgAuthToken').value = 'campusmate-dev-token-xyz';
+      document.getElementById('cfgStudentId').value = 1;
+    });
+
+    btnAutoLogin.addEventListener('click', () => {
+      performDemoLogin();
+    });
+
+    // Spacebar to toggle voice input when not typing in text field
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.activeElement !== userInputText) {
+        e.preventDefault();
+        toggleListening();
+      }
+    });
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initSpeechRecognition();
+      initSpeechSynthesis();
+      checkBackendConnection();
+
+      if (CONFIG.executionMode === 'mcp_direct') {
+        modeBtnMcp.classList.add('active');
+        modeBtnRest.classList.remove('active');
+      }
+      btnToggleSpeech.classList.toggle('active', CONFIG.speechEnabled);
+      speechToggleLabel.textContent = CONFIG.speechEnabled ? 'Audio On' : 'Audio Muted';
+    });
+  </script>
+</body>
+</html>

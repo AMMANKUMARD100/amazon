@@ -1,0 +1,522 @@
+{
+  "$schema": "https://developer.amazon.com/schemas/custom/skill/manifest.json",
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "name": "CampusMate AI",
+          "summary": "Voice-first intelligent academic concierge agent that organizes student life with schedules, attendance risk alerts, assignments, and study plans.",
+          "description": "CampusMate AI is an advanced, autonomous academic agent skill built for Amazon Alexa+ and the Alexa Skills Kit (ASK).\n\nEquipped with 13 specialized Model Context Protocol (MCP) tools, CampusMate acts as a personal academic concierge. It connects directly to university schedules, course timetables, exam dates, and attendance tracking to proactively safeguard student performance.\n\nKey Capabilities:\n• Daily Academic Briefing: Wake up to today's lectures, classroom locations, and urgent deadlines.\n• Attendance Safeguard: Tracks 75% attendance minimums and alerts students before they fall below university cutoffs.\n• Task & Assignment Tracking: Effortlessly add, update, and prioritize homework and projects by voice.\n• Autonomous Evening Planner: Say 'Alexa, plan my evening' to trigger a multi-step agent chain that inspects today's schedule, evaluates pending assignments, and generates an optimized study routine.\n• Exam Preparation: Generates balanced study schedules factoring in subject difficulty and upcoming tests.\n• Campus Knowledge Search: Instantly retrieve university policies, library hours, and hostel regulations.",
+          "examplePhrases": [
+            "Alexa, open CampusMate AI",
+            "Alexa, ask CampusMate AI to plan my evening",
+            "Alexa, ask CampusMate AI what assignments are due"
+          ],
+          "keywords": [
+            "student",
+            "university",
+            "academic",
+            "study plan",
+            "attendance",
+            "schedule",
+            "concierge",
+            "mcp",
+            "alexa agent"
+          ],
+          "smallIconUri": "https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/alexa-dev-portal-resources/icon_108.png",
+          "largeIconUri": "https://m.media-amazon.com/images/G/01/mobile-apps/dex/alexa/alexa-skills-kit/alexa-dev-portal-resources/icon_512.png"
+        }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "Test by saying: 'Alexa, open CampusMate AI', followed by 'What is my daily briefing?', 'Check my attendance', or 'Plan my evening'.",
+      "category": "EDUCATION_AND_REFERENCE",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:123456789012:function:campusmate-alexa-agent"
+        },
+        "interfaces": [
+          {
+            "type": "ALEXA_PRESENTATION_APL",
+            "supportedViewports": [
+              {
+                "mode": "HUB",
+                "shape": "RECTANGLE",
+                "minWidth": 960,
+                "maxWidth": 1280,
+                "minHeight": 600,
+                "maxHeight": 800
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "en-US": {
+          "privacyPolicyUrl": "https://campusmate.ai/privacy",
+          "termsOfUseUrl": "https://campusmate.ai/terms"
+        }
+      }
+    }
+  },
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "campus mate",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "DailyBriefingIntent",
+          "slots": [],
+          "samples": [
+            "what is my daily briefing",
+            "give me my daily briefing",
+            "daily briefing",
+            "what is my briefing for today",
+            "what is on my agenda today",
+            "what do I have today",
+            "good morning",
+            "what's up",
+            "how does my day look"
+          ]
+        },
+        {
+          "name": "ListTasksIntent",
+          "slots": [
+            {
+              "name": "Status",
+              "type": "TASK_STATUS"
+            }
+          ],
+          "samples": [
+            "what assignments do I have",
+            "list my tasks",
+            "show my tasks",
+            "what tasks are pending",
+            "what homework is due",
+            "show my assignments",
+            "what is due this week",
+            "do I have any tasks",
+            "pending tasks"
+          ]
+        },
+        {
+          "name": "AddTaskIntent",
+          "slots": [
+            {
+              "name": "TaskTitle",
+              "type": "AMAZON.SearchQuery",
+              "samples": [
+                "study for exam",
+                "finish database homework",
+                "physics lab report"
+              ]
+            },
+            {
+              "name": "DueDate",
+              "type": "AMAZON.DATE",
+              "samples": [
+                "tomorrow",
+                "next monday",
+                "friday"
+              ]
+            },
+            {
+              "name": "Priority",
+              "type": "TASK_PRIORITY"
+            },
+            {
+              "name": "SubjectCode",
+              "type": "COURSE_CODE"
+            }
+          ],
+          "samples": [
+            "add task {TaskTitle} due {DueDate}",
+            "add task {TaskTitle}",
+            "create task {TaskTitle} due {DueDate}",
+            "remind me to {TaskTitle} by {DueDate}",
+            "new assignment {TaskTitle} due {DueDate}",
+            "add homework {TaskTitle} due {DueDate}",
+            "add a new task {TaskTitle}",
+            "add {Priority} priority task {TaskTitle} due {DueDate}"
+          ]
+        },
+        {
+          "name": "CompleteTaskIntent",
+          "slots": [
+            {
+              "name": "TaskIdentifier",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "complete task {TaskIdentifier}",
+            "mark task {TaskIdentifier} as completed",
+            "mark task {TaskIdentifier} done",
+            "finish assignment {TaskIdentifier}",
+            "mark {TaskIdentifier} done",
+            "done with task {TaskIdentifier}"
+          ]
+        },
+        {
+          "name": "DeleteTaskIntent",
+          "slots": [
+            {
+              "name": "TaskIdentifier",
+              "type": "AMAZON.SearchQuery"
+            },
+            {
+              "name": "ConfirmToken",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "delete task {TaskIdentifier}",
+            "remove task {TaskIdentifier}",
+            "delete assignment {TaskIdentifier}",
+            "confirm token {ConfirmToken}",
+            "delete task confirm token {ConfirmToken}"
+          ]
+        },
+        {
+          "name": "GetAttendanceIntent",
+          "slots": [
+            {
+              "name": "SubjectCode",
+              "type": "COURSE_CODE"
+            }
+          ],
+          "samples": [
+            "how is my attendance",
+            "check my attendance",
+            "can I miss class",
+            "can I skip class today",
+            "attendance summary",
+            "what is my attendance in {SubjectCode}",
+            "show my attendance",
+            "am I safe in attendance",
+            "attendance warning"
+          ]
+        },
+        {
+          "name": "GetScheduleIntent",
+          "slots": [
+            {
+              "name": "Day",
+              "type": "AMAZON.DayOfWeek"
+            }
+          ],
+          "samples": [
+            "what's my schedule",
+            "show my timetable",
+            "what classes do I have today",
+            "what lectures do I have on {Day}",
+            "show schedule for {Day}",
+            "when is my next class",
+            "classes today",
+            "timetable for {Day}"
+          ]
+        },
+        {
+          "name": "GenerateStudyPlanIntent",
+          "slots": [
+            {
+              "name": "DailyHours",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "generate study plan",
+            "create a study schedule",
+            "plan my study time",
+            "generate study plan for {DailyHours} hours",
+            "make a study schedule",
+            "give me a study plan"
+          ]
+        },
+        {
+          "name": "PlanMyDayIntent",
+          "slots": [],
+          "samples": [
+            "plan my evening",
+            "plan my day",
+            "organize my evening",
+            "what should I focus on tonight",
+            "give me an evening plan",
+            "organize my study evening"
+          ]
+        },
+        {
+          "name": "GetDashboardIntent",
+          "slots": [],
+          "samples": [
+            "show dashboard",
+            "academic dashboard",
+            "give me an overview",
+            "academic status",
+            "how am I doing this semester",
+            "show my academic overview"
+          ]
+        },
+        {
+          "name": "CalculateCGPAIntent",
+          "slots": [],
+          "samples": [
+            "what is my gpa",
+            "what is my cgpa",
+            "calculate my cgpa",
+            "show my grade point average",
+            "predict my cgpa",
+            "how is my academic performance"
+          ]
+        },
+        {
+          "name": "ListExamsIntent",
+          "slots": [],
+          "samples": [
+            "when are my exams",
+            "list exams",
+            "upcoming test schedule",
+            "what exams do I have",
+            "show my exam dates",
+            "when is my next test"
+          ]
+        },
+        {
+          "name": "SearchFAQIntent",
+          "slots": [
+            {
+              "name": "Query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "what is the policy on {Query}",
+            "what is the hostel curfew",
+            "what are the library hours",
+            "search policy for {Query}",
+            "ask question {Query}",
+            "campus regulations for {Query}",
+            "can I get a late pass"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "TASK_STATUS",
+          "values": [
+            { "name": { "value": "Pending", "synonyms": ["incomplete", "active", "open", "todo"] } },
+            { "name": { "value": "Completed", "synonyms": ["finished", "done", "closed"] } }
+          ]
+        },
+        {
+          "name": "TASK_PRIORITY",
+          "values": [
+            { "name": { "value": "High", "synonyms": ["urgent", "critical", "top"] } },
+            { "name": { "value": "Medium", "synonyms": ["normal", "standard"] } },
+            { "name": { "value": "Low", "synonyms": ["minor", "casual"] } }
+          ]
+        },
+        {
+          "name": "COURSE_CODE",
+          "values": [
+            { "name": { "value": "CS101", "synonyms": ["Introduction to Programming", "Python", "Coding"] } },
+            { "name": { "value": "CS102", "synonyms": ["Data Structures", "Algorithms", "DSA"] } },
+            { "name": { "value": "CS103", "synonyms": ["Discrete Math", "Mathematics"] } },
+            { "name": { "value": "CS104", "synonyms": ["Database", "DBMS", "SQL"] } },
+            { "name": { "value": "CS105", "synonyms": ["Software Engineering", "SE"] } }
+          ]
+        }
+      ]
+    }
+  },
+  "agentConfiguration": {
+    "agentName": "CampusMate AI",
+    "framework": "Alexa+ Agent Skills Kit",
+    "protocolVersion": "2024-11-05",
+    "systemPrompt": "You are CampusMate AI, a friendly, concise voice-first student assistant for Amazon Developer Hackathon. Follow these rules:\n1. Speak naturally in 1-2 short, spoken sentences. Avoid markdown, asterisks, bullet points, and raw JSON in voice output.\n2. Never invent dates, deadlines, subjects, or exam schedules. If a date is missing, politely ask the student.\n3. Use the provided MCP tools to inspect or update tasks, exams, schedule, attendance, and study plans.\n4. For destructive operations like deleting tasks or replacing existing study plans, require and provide the confirmation token.\n5. When multiple items match a request, list the candidates and ask the student to pick by ID.",
+    "tools": [
+      {
+        "name": "daily_briefing",
+        "description": "Get today's agenda including lectures, assignments due today/tomorrow, and study sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "list_tasks",
+        "description": "List student assignments and tasks. Optionally filter by status ('Pending' or 'Completed').",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["Pending", "Completed"],
+              "description": "Optional filter for task status"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "add_task",
+        "description": "Add a new assignment or homework task with a validated YYYY-MM-DD due date.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "description": "Title of the task" },
+            "due_date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Due date in YYYY-MM-DD format" },
+            "priority": { "type": "string", "enum": ["High", "Medium", "Low"], "description": "Priority level" },
+            "description": { "type": "string", "description": "Optional details" },
+            "subject_code": { "type": "string", "description": "Course code (e.g. CS101)" }
+          },
+          "required": ["title", "due_date"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "update_task",
+        "description": "Update an existing task's title, description, due date, priority, or status.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": { "type": "integer" },
+            "task_title": { "type": "string" },
+            "title": { "type": "string" },
+            "due_date": { "type": "string" },
+            "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+            "status": { "type": "string", "enum": ["Pending", "Completed"] }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "complete_task",
+        "description": "Mark an assignment as completed by task_id or title substring.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": { "type": "integer" },
+            "task_title": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "delete_task",
+        "description": "Permanently delete a task. Destructive: returns a confirmation token if confirm_token is not supplied.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": { "type": "integer" },
+            "task_title": { "type": "string" },
+            "confirm_token": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get_attendance_summary",
+        "description": "Get attendance percentages, safe cutoffs, and required attendance per enrolled course.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get_timetable",
+        "description": "Get student's weekly lecture timetable and room assignments.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "generate_study_plan",
+        "description": "Generate a realistic personalized study schedule balancing subjects, difficulty, pending tasks, timetable, and upcoming exams.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "daily_hours": { "type": "number", "minimum": 0.5, "maximum": 12.0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "save_study_plan",
+        "description": "Persist generated study sessions into the student's calendar. Destructive when replacing existing sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "slots": { "type": "array" },
+            "confirm_token": { "type": "string" }
+          },
+          "required": ["slots"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "calculate_cgpa",
+        "description": "Calculate projected CGPA, cumulative grade points, and semester performance.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "list_exams",
+        "description": "List all scheduled exams and midterms for the student.",
+        "parameters": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "search_faq",
+        "description": "Search campus knowledge base, policies, hostel rules, academic regulations, and library guidelines.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "minLength": 1 }
+          },
+          "required": ["query"],
+          "additionalProperties": false
+        }
+      }
+    ]
+  }
+}

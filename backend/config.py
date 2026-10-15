@@ -22,3 +22,7 @@ class Config:
     BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-3-haiku-20240307-v1:0')
     AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
 
+    # MCP Server Settings
+    MCP_PORT = int(os.environ.get('MCP_PORT', 8080))
+    MCP_AUTH_TOKEN = os.environ.get('MCP_AUTH_TOKEN', '')
+

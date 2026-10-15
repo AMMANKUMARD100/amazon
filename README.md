@@ -211,3 +211,91 @@ Follow this sequence to inspect the entire ecosystem:
 
 ## 📝 License
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+---
+
+## 🏆 Built for the Amazon Developer Hackathon (Alexa+ Track)
+
+This section documents the capabilities added to CampusMate AI specifically for the **Amazon Developer Hackathon (Alexa+ track)**. All existing capabilities (Flask REST, 8 agents, React dashboard, SQLite isolation) remain 100% operational alongside these new additions.
+
+### What Was Added
+
+| Component | Path | Description |
+|-----------|------|-------------|
+| **FastMCP Server** | [`backend/mcp_server.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/mcp_server.py) | Self-hosted MCP Server using official Python SDK (`FastMCP`), `streamable-http` transport, bearer-token auth (`MCP_AUTH_TOKEN`), wrapping 13 core tools + 4 new tools (`daily_briefing`, `calculate_cgpa`, `get_dashboard`, `get_timetable`). |
+| **MCP Start Script** | [`start_mcp.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/start_mcp.py) | Standalone launcher running on configurable `MCP_PORT` (default: 8080). |
+| **Alexa+ Web Simulator** | [`alexa-sim/index.html`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/alexa-sim/index.html) | Interactive web client featuring Web Speech API voice input, speech synthesis, glowing multi-state audio orb, real-time live transcript, and an live Tool Call Inspector showing streaming JSON-RPC payloads. |
+| **Alexa Agent Skill** | [`alexa-skill/skill.json`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/alexa-skill/skill.json) | Complete Alexa+ Agent Skill manifest with mapped utterances, slot types, intent schemas, and tool parameter definitions. |
+| **VoiceAgent Orchestrator** | [`backend/agents/voice_agent.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/agents/voice_agent.py) | Deterministic multi-step orchestrator chaining atomic tools into natural spoken replies (e.g. *"Plan my evening"* chains schedule + pending tasks + study planner). |
+| **Proactive Intelligence** | [`backend/services/proactive_service.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/services/proactive_service.py) | Rule-based engine computing attendance risk alerts (<75%), deadline conflicts within 48h, exam overlaps, and weekly performance reviews. |
+| **Proactive API Routes** | [`backend/routes/proactive_routes.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/routes/proactive_routes.py) | REST endpoints for alerts, attendance risks, deadline conflicts, weekly summaries, and voice processing. |
+| **AWS Bedrock Guide** | [`docs/AWS.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/AWS.md) | Architectural setup guide for Amazon Bedrock Claude 3 Haiku / Converse API with offline fallback. |
+| **Submission Package** | `docs/` | Comprehensive hackathon documentation: [`PROJECT_DESCRIPTION.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/PROJECT_DESCRIPTION.md), [`DEMO_SCRIPT.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/DEMO_SCRIPT.md), [`PRODUCT_FEEDBACK.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/PRODUCT_FEEDBACK.md), [`FRICTION_LOG.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/FRICTION_LOG.md), and [`FEATURE_REQUESTS.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/FEATURE_REQUESTS.md). |
+
+### Hackathon Architecture
+
+```
+                                  +-----------------------------+
+                                  |   Alexa+ Voice Interaction  |
+                                  |   (Web Speech API / Echo)   |
+                                  +--------------+--------------+
+                                                 |
+                                                 v
+                       +-------------------------------------------------+
+                       |       Alexa+ Simulator / Alexa Agent Skill      |
+                       |       alexa-sim/index.html | skill.json         |
+                       +-------------------------+-----------------------+
+                                                 |
+                                 Streamable HTTP | (MCP Transport)
+                                                 v
+                       +-------------------------------------------------+
+                       |            FastMCP Server (:8080)               |
+                       |             backend/mcp_server.py               |
+                       +-------------------------+-----------------------+
+                                                 |
+                +--------------------------------+-------------------------------+
+                |                                |                               |
+                v                                v                               v
+     +--------------------+            +--------------------+          +--------------------+
+     |  Domain Services   |            |  Voice Orchestrator|          | Proactive Engine   |
+     |  - task_service    |            |  voice_agent.py    |          | proactive_service  |
+     |  - attendance_serv |            |  (multi-step tool  |          | - attendance risk  |
+     |  - schedule_service|            |   chains)          |          | - deadline conflict|
+     |  - exam_service    |            +--------------------+          | - weekly summary   |
+     +----------+---------+                                            +----------+---------+
+                |                                                                 |
+                +--------------------------------+--------------------------------+
+                                                 |
+                                                 v
+                               +-----------------------------------+
+                               |     SQLite Database Repository    |
+                               |    backend/database/campusmate.db |
+                               +-----------------------------------+
+```
+
+### Quick Start: Running the Hackathon Features
+
+1. **Launch the Flask Backend (Terminal 1):**
+   ```bash
+   python backend/app.py
+   ```
+   *Runs REST API on `http://localhost:5000`.*
+
+2. **Launch the FastMCP Server (Terminal 2):**
+   ```bash
+   python start_mcp.py
+   ```
+   *Runs Streamable HTTP MCP Server on `http://localhost:8080/mcp`.*
+
+3. **Launch the Alexa+ Web Simulator (Terminal 3):**
+   ```bash
+   cd alexa-sim
+   python -m http.server 3001
+   ```
+   *Open `http://localhost:3001` in Chrome or Edge. Click the microphone orb or press spacebar to issue voice commands like "Plan my evening" or "Good morning, give me my daily briefing".*
+
+4. **Run the Full Test Suite (Existing 40 + New Tests):**
+   ```bash
+   python -m unittest discover -s tests
+   ```
+
