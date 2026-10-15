@@ -37,24 +37,27 @@ def handle_app_error(err):
     return jsonify(err.to_dict()), err.status_code
 
 def run_deterministic_engine(student_id, utterance):
-    """Deterministic intent parser delegating directly to domain services."""
+    """Deterministic intent parser delegating to unified tool_registry."""
+    from backend.tools import execute_tool, tool_registry
     text = utterance.lower().strip()
 
     # 1. Complete task intent
     complete_match = re.search(r"^(?:complete|finish|mark done|done)\s+(?:task|assignment)?\s*(.+)$", text)
     if complete_match:
         target = complete_match.group(1).strip()
-        # Find candidate tasks
-        tasks = list_tasks(student_id, status="Pending")
-        matched = None
-        if target.isdigit():
-            tid = int(target)
-            matched = next((t for t in tasks if t['id'] == tid), None)
-        else:
-            matched = next((t for t in tasks if target in t['title'].lower()), None)
-
-        if matched:
-            res = complete_task(student_id, matched['id'])
+        args = {"task_id": int(target)} if target.isdigit() else {"task_title": target}
+        out = execute_tool("complete_task", student_id, args)
+        if out["success"]:
+            res = out["result"]
+            if isinstance(res, dict) and res.get("ambiguity"):
+                speech = "Multiple tasks matched that description: " + ", ".join([f"#{c['id']} ({c['title']})" for c in res["candidates"]]) + ". Please specify by task ID."
+                return {
+                    "speech": speech,
+                    "card": {"title": "Multiple Tasks Found", "content": speech},
+                    "action_executed": "complete_task",
+                    "tool_result": res,
+                    "mode": "deterministic_demo"
+                }
             speech = f"Task '{res['title']}' has been marked as completed."
             return {
                 "speech": speech,
@@ -64,9 +67,10 @@ def run_deterministic_engine(student_id, utterance):
                 "mode": "deterministic_demo"
             }
         else:
+            msg = out["error"]["message"]
             return {
-                "speech": f"Could not find matching pending task for '{target}'.",
-                "card": {"title": "Task Notice", "content": f"Task '{target}' not found."},
+                "speech": f"Could not complete task: {msg}",
+                "card": {"title": "Task Notice", "content": msg},
                 "mode": "deterministic_demo"
             }
 
@@ -100,8 +104,9 @@ def run_deterministic_engine(student_id, utterance):
                 "mode": "deterministic_demo"
             }
 
-        try:
-            res = add_task(student_id, title=title, due_date=due_date)
+        out = execute_tool("add_task", student_id, {"title": title, "due_date": due_date})
+        if out["success"]:
+            res = out["result"]
             speech = f"I've added the task '{title}' due on {res['due_date']}."
             return {
                 "speech": speech,
@@ -110,10 +115,11 @@ def run_deterministic_engine(student_id, utterance):
                 "tool_result": res,
                 "mode": "deterministic_demo"
             }
-        except AppError as e:
+        else:
+            msg = out["error"]["message"]
             return {
-                "speech": f"Sorry, could not save task: {e.message}",
-                "card": {"title": "Validation Error", "content": e.message},
+                "speech": f"Sorry, could not save task: {msg}",
+                "card": {"title": "Validation Error", "content": msg},
                 "mode": "deterministic_demo"
             }
 
@@ -121,17 +127,35 @@ def run_deterministic_engine(student_id, utterance):
     delete_match = re.search(r"^(?:delete|remove)\s+(?:task|assignment)\s*(.+)$", text)
     if delete_match:
         target = delete_match.group(1).strip()
-        tasks = list_tasks(student_id)
-        matched = None
-        if target.isdigit():
-            tid = int(target)
-            matched = next((t for t in tasks if t['id'] == tid), None)
-        else:
-            matched = next((t for t in tasks if target in t['title'].lower()), None)
+        # Check if confirming with a token: e.g. "delete task confirm <token>"
+        confirm_token = None
+        confirm_match = re.search(r"(?:confirm|token)\s+([a-f0-9]{32})", text)
+        if confirm_match:
+            confirm_token = confirm_match.group(1)
 
-        if matched:
-            res = delete_task(student_id, matched['id'])
-            speech = res["message"]
+        args = {"confirm_token": confirm_token} if confirm_token else ({"task_id": int(target)} if target.isdigit() else {"task_title": target})
+        out = execute_tool("delete_task", student_id, args)
+        if out["success"]:
+            res = out["result"]
+            if isinstance(res, dict) and res.get("pending_confirmation"):
+                speech = f"{res['message']} Say 'confirm token {res['confirm_token']}' to proceed."
+                return {
+                    "speech": speech,
+                    "card": {"title": "Confirmation Required", "content": speech},
+                    "action_executed": "delete_task",
+                    "tool_result": res,
+                    "mode": "deterministic_demo"
+                }
+            if isinstance(res, dict) and res.get("ambiguity"):
+                speech = "Multiple tasks match that title: " + ", ".join([f"#{c['id']} ({c['title']})" for c in res["candidates"]]) + ". Please specify by task ID."
+                return {
+                    "speech": speech,
+                    "card": {"title": "Multiple Tasks Found", "content": speech},
+                    "action_executed": "delete_task",
+                    "tool_result": res,
+                    "mode": "deterministic_demo"
+                }
+            speech = res.get("message", "Task deleted.")
             return {
                 "speech": speech,
                 "card": {"title": "Delete Task", "content": speech},
@@ -140,15 +164,17 @@ def run_deterministic_engine(student_id, utterance):
                 "mode": "deterministic_demo"
             }
         else:
+            msg = out["error"]["message"]
             return {
-                "speech": f"Could not find task '{target}'.",
-                "card": {"title": "Not Found", "content": f"Task '{target}' not found."},
+                "speech": f"Could not delete task: {msg}",
+                "card": {"title": "Error", "content": msg},
                 "mode": "deterministic_demo"
             }
 
     # 4. List tasks
     if any(k in text for k in ["task", "assignment", "todo", "homework"]) and any(k in text for k in ["show", "list", "what", "pending", "view"]):
-        tasks = list_tasks(student_id, status="Pending")
+        out = execute_tool("list_tasks", student_id, {"status": "Pending"})
+        tasks = out.get("result", []) if out["success"] else []
         if not tasks:
             speech = "You have no pending tasks right now. Great job staying ahead!"
         else:
@@ -164,7 +190,8 @@ def run_deterministic_engine(student_id, utterance):
 
     # 5. Check attendance
     if "attendance" in text or "miss class" in text:
-        att = calculate_attendance(student_id)
+        out = execute_tool("get_attendance_summary", student_id, {})
+        att = out.get("result", []) if out["success"] else []
         low = [a for a in att if a['percentage'] < 75]
         if low:
             speech = f"Warning: Your attendance in {low[0]['name']} is at {low[0]['percentage']}%, which is below 75%. You need to attend {low[0]['classes_needed_for_75']} consecutive classes."
@@ -181,13 +208,14 @@ def run_deterministic_engine(student_id, utterance):
 
     # 6. Today schedule
     if any(k in text for k in ["today", "schedule", "timetable", "class", "lecture"]):
-        sched = get_today_reminder(student_id)
-        classes = sched["classes"]
+        out = execute_tool("get_today_summary", student_id, {})
+        sched = out.get("result", {}) if out["success"] else {}
+        classes = sched.get("classes", [])
         if classes:
             c_desc = ", ".join([f"{c['name']} at {c['start_time']} in {c['room']}" for c in classes])
-            speech = f"For today ({sched['day']}), you have: {c_desc}."
+            speech = f"For today ({sched.get('day', 'today')}), you have: {c_desc}."
         else:
-            speech = f"You have no scheduled classes for today ({sched['day']})."
+            speech = f"You have no scheduled classes for today ({sched.get('day', 'today')})."
         return {
             "speech": speech,
             "card": {"title": "Today's Schedule", "content": speech},
@@ -197,7 +225,8 @@ def run_deterministic_engine(student_id, utterance):
         }
 
     # 7. FAQ search
-    faq_results = search_faq(utterance)
+    out_faq = execute_tool("search_faq", student_id, {"query": utterance})
+    faq_results = out_faq.get("result", []) if out_faq["success"] else []
     if faq_results:
         best = faq_results[0]
         speech = best['answer']
