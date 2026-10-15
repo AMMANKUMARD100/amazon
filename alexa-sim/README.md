@@ -37,19 +37,19 @@ It simulates the conversational experience of an Amazon Echo Show / Alexa+ multi
 
 ### Option 1: Direct Browser Launch
 Since `alexa-sim/index.html` is completely self-contained with no external build step or npm dependency, you can open it directly in Google Chrome or Microsoft Edge:
-```powershell
-# In PowerShell:
-Start-Process "c:\Users\Amman kumar D\Downloads\amazon\alexa-sim\index.html"
+```bash
+# Open directly in your browser:
+open alexa-sim/index.html    # macOS
+start alexa-sim/index.html   # Windows
 ```
 
 ### Option 2: Serve via Local HTTP Server (Recommended for Mic Permissions)
 Some browsers require an HTTP origin for Web Speech API microphone access:
-```powershell
+```bash
 # From the project root:
-cd "c:\Users\Amman kumar D\Downloads\amazon"
-python -m http.server 3000 --directory alexa-sim
+python -m http.server 3001 --directory alexa-sim
 ```
-Then visit **`http://localhost:3000`** in your browser.
+Then visit **`http://localhost:3001`** in your browser.
 
 ---
 
@@ -57,7 +57,7 @@ Then visit **`http://localhost:3000`** in your browser.
 
 ### 1. Flask REST API (Port 5000)
 Run the Flask server:
-```powershell
+```bash
 python backend/app.py
 ```
 - In the simulator, click **Config** (gear icon) and verify the API URL is `http://localhost:5000`.
@@ -65,10 +65,9 @@ python backend/app.py
 
 ### 2. MCP Server (Port 8080)
 When running the FastMCP streamable HTTP server:
-```powershell
+```bash
 # Set token and start MCP server
-$env:MCP_AUTH_TOKEN="campusmate-dev-token-xyz"
-python backend/mcp_server.py
+python start_mcp.py
 ```
 - Toggle the execution mode in the inspector to **"Direct MCP Stream"**.
 - The simulator will send JSON-RPC 2.0 tool requests to `http://localhost:8080/mcp`.
@@ -98,7 +97,7 @@ python backend/mcp_server.py
 Click the **Config** button in the header to modify:
 - **Flask REST API Base URL**: Default `http://localhost:5000`
 - **MCP Server Endpoint**: Default `http://localhost:8080/mcp`
-- **MCP Bearer Auth Token**: Default `campusmate-dev-token-xyz`
+- **MCP Bearer Auth Token**: Default `dev_mcp_secret_token_12345`
 - **Student ID Context**: Default `1` (Alex Mercer)
 - **Voice Selection**: Choose any speech synthesis voice installed on your system.
 - **Audio Toggle**: Mute or enable voice speech output at any time.

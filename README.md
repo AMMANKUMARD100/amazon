@@ -1,17 +1,126 @@
-# CampusMate AI – Intelligent Student Concierge Agent
+# CampusMate AI – Intelligent Student Concierge Agent (Alexa+ Track)
 
-CampusMate AI is a production-ready, fully modular, secure, and offline **Intelligent Student Concierge Agent** built as a Google Capstone Project. It helps students organize their academic lives by coordinating a specialized **Multi-Agent System** that acts on data through a local **Model Context Protocol (MCP)** REST API Server.
-
-This application is designed to run **100% offline** with **zero external API dependencies** (no OpenAI, Gemini, or Claude keys required). All intelligent planning, advisories, search patterns, and reminders are driven by offline rule-based heuristics, decision trees, and local text index engines.
+> **Built for the Amazon Developer Hackathon (Alexa+ Track)**  
+> An autonomous, multimodal student concierge that bridges academic scheduling, attendance tracking, and study planning to the **Alexa+ Agent Framework** via a self-hosted **Model Context Protocol (MCP)** Streamable-HTTP server and optional **Amazon Bedrock** reasoning.
 
 ---
-<img width="1880" height="836" alt="Image" src="https://github.com/user-attachments/assets/63de1595-a3b7-4b75-8652-43ecd65b25f6" />
-## 🚀 Key Capstone Architecture Concepts
 
-### 1. Multi-Agent System (Google ADK Style)
+### 🌟 Hackathon Pitch & Overview
+CampusMate AI eliminates student cognitive overload by orchestrating specialized multi-agent workflows through standard **Model Context Protocol (MCP)** tools. Whether speaking to an Echo device, interacting with the multimodal web simulator, or reviewing dashboards, students can issue natural multi-step commands like *"Alexa, plan my evening"* or *"Alexa, am I at risk of attendance cutoff?"*. The agent autonomously chains schedule inspection, assignment auditing, and dynamic study generation into concise, natural spoken responses.
+
+- **Base Attribution:** Built on top of the open-source base repository [`TechEra007/Capstone-Campusmate-AI`](https://github.com/TechEra007/Capstone-Campusmate-AI), distributed under the **MIT License**.
+- **Execution Model:** Works **100% offline by default** using local heuristic engines and rule-based planning (zero required API keys). Optionally connects to **Amazon Bedrock** (`Claude 3 Haiku` Converse API) for conversational reasoning and intent extraction.
+- **Protocol Standards:** Runs a dual architecture featuring a classic Flask REST API server alongside a production-ready **FastMCP Streamable-HTTP Server** (spec compliant) protected by Bearer token authentication.
+- **Full Audit Report:** See [`HACKATHON_REPORT.md`](HACKATHON_REPORT.md) for full benchmark validation logs.
+
+---
+
+### ⚡ Quick Start (5 Commands or Fewer)
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run the full test suite (60 tests)
+python -m unittest discover -s tests
+
+# 3. Start the FastMCP Streamable-HTTP server (:8080)
+python start_mcp.py
+
+# 4. Start the Flask REST API & Backend (:5000)
+python backend/app.py
+
+# 5. Launch the Alexa+ Web Simulator (:3001)
+python -m http.server 3001 --directory alexa-sim
+```
+*Visit `http://localhost:3001` in Chrome or Edge to interact via microphone or keyboard.*
+
+---
+
+### 📊 What Was Built During Hackathon vs. Original Base
+
+| Component / Layer | Original Base Repo (`TechEra007`) | Built During Hackathon (Alexa+ Track) |
+| :--- | :--- | :--- |
+| **MCP Server** | REST API endpoints acting in MCP style | **Official FastMCP Python Server** on `streamable-http` with Bearer auth middleware, MCP handshake, and session IDs |
+| **Voice Interface** | None (React web UI & CLI only) | **Alexa+ Web Simulator** (`alexa-sim/`) with glowing audio-reactive orb, Web Speech API STT/TTS, and live Tool Inspector |
+| **Alexa Skill** | None | Complete **Alexa+ Agent Skill manifest & schema** (`alexa-skill/skill.json`) |
+| **Multi-Step Orchestrator**| Manual navigation across tabs | **`VoiceAgent`** (`backend/agents/voice_agent.py`) chaining multi-step voice requests into single spoken answers |
+| **Proactive Intelligence** | Basic manual threshold check | **`proactive_service.py`**: Attendance risk cutoff alerts (<75%), 48-hour deadline conflicts, exam overlaps, and weekly summaries |
+| **LLM Reasoning** | Offline heuristics only | **Amazon Bedrock Converse API** (`Claude 3 Haiku`) integration with automatic fallback to offline demo engine |
+| **Tools Count** | 8 basic endpoints | **17 Typed MCP Tools** + unified registry with strict JSON schemas and destructive confirmation tokens |
+| **Test Coverage** | ~10 basic tests | **60 Automated Unit & Integration Tests** protecting baseline behavior and validating all MCP flows |
+
+---
+
+### 🛠️ Exposed MCP Tools (17 Tools)
+
+1. `list_tasks`: Query assignments filtered by pending/completed.
+2. `add_task`: Create tasks with validated dates and course associations.
+3. `update_task`: Modify task properties with ambiguity resolution.
+4. `complete_task`: Mark tasks finished by ID or title substring.
+5. `delete_task`: Destructive deletion guarded by cryptographic confirmation tokens.
+6. `add_exam`: Record upcoming exam dates and preparation notes.
+7. `list_exams`: List scheduled midterms and finals.
+8. `set_study_hours`: Configure available study windows per weekday.
+9. `generate_study_plan`: Generate balanced calendar study slots.
+10. `save_study_plan`: Commit study slots to the calendar.
+11. `get_today_summary`: Consolidated daily agenda (classes + tasks + study blocks).
+12. `get_attendance_summary`: Course attendance percentages with consecutive class cutoffs.
+13. `search_faq`: Natural language search across campus regulations and policies.
+14. `daily_briefing`: **(New)** Natural spoken morning summary combining timetable, attendance warnings, and urgent tasks.
+15. `get_dashboard`: **(New)** Student standing, GPA, and upcoming workload metrics.
+16. `get_timetable`: **(New)** Weekly course schedule with lecture rooms and timings.
+17. `calculate_cgpa`: **(New)** Current CGPA and projected semester GPA calculations.
+
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+graph TD
+    User([Student Voice / Echo / Browser]) -->|Microphone / Web Speech| Sim[Alexa+ Simulator / Alexa Skill]
+    Sim -->|Streamable-HTTP / Bearer Auth| FastMCP[FastMCP Server :8080]
+    Sim -.->|HTTP REST / Cookies| Flask[Flask REST API :5000]
+
+    subgraph FastMCP_Server [FastMCP Server Architecture :8080]
+        AuthMW[MCP Bearer Auth Middleware]
+        BoundCheck[Bound Student ID Verifier]
+        Tools[17 Typed FastMCP Tools]
+        AuthMW --> BoundCheck --> Tools
+    end
+    FastMCP --> FastMCP_Server
+
+    subgraph Agent_Core [Agentic & Intelligence Layer]
+        VoiceAgent[VoiceAgent Orchestrator]
+        Proactive[Proactive Intelligence Engine]
+        Bedrock[Amazon Bedrock Converse API]
+        OfflineDemo[Offline Rule Engine Fallback]
+    end
+
+    Tools --> VoiceAgent
+    Tools --> Proactive
+    Flask --> Bedrock
+    Bedrock -.->|Fallback| OfflineDemo
+
+    subgraph Storage [Database Layer]
+        SQLite[(SQLite Database: campusmate.db)]
+    end
+
+    VoiceAgent --> SQLite
+    Proactive --> SQLite
+    Flask --> SQLite
+```
+
+---
+
+<img width="1880" height="836" alt="CampusMate Overview" src="https://github.com/user-attachments/assets/63de1595-a3b7-4b75-8652-43ecd65b25f6" />
+
+## 🚀 Key Base Architecture Concepts
+
+### 1. Multi-Agent System
 CampusMate AI coordinates eight specialized agents using a mediator/orchestrator pattern managed by the `AgentManager`.
 * **Agent Isolation:** Agents never communicate directly; all inquiries and responses flow through the `AgentManager`.
-* **Data Boundary Constraints:** Agents are strictly forbidden from accessing the database directly. They query and modify database states only by invoking REST tool endpoints on the local MCP server.
+* **Data Boundary Constraints:** Agents are strictly forbidden from accessing the database directly. They query and modify database states only by invoking REST tool endpoints on the local service layer.
 * **Specialized Agent Roles:**
   * **PlannerAgent:** Generates study schedule structures using subject credits, difficulties, and upcoming assignment deadlines.
   * **AttendanceAgent:** Computes attendance percentages and predicts consecutive classes needed or missable.
@@ -22,22 +131,20 @@ CampusMate AI coordinates eight specialized agents using a mediator/orchestrator
   * **StudyAgent:** Recommends focus hours and Pomodoro techniques for rigorous or low-performing subjects.
   * **NotificationAgent:** Monitors thresholds and records database alert warnings for risk conditions.
 
-### 2. MCP Server Architecture
-A REST API server wraps a SQLite database file and exposes standard tools as JSON endpoints.
-* **MCP Tools Implemented:**
-  * `getAssignments` / `addAssignment` / `updateAssignment` / `deleteAssignment`
-  * `getAttendance` / `calculateAttendance`
-  * `getTimetable`
-  * `createStudyPlan`
-  * `calculateCGPA` (credit-weighted projection calculator)
-  * `getDashboard`
-  * `searchFAQ`
-  * `todayReminder`
+### 2. Dual Service Architecture
+The system provides dual access layers:
+1. **Flask REST API Layer (:5000):** Provides REST endpoints for web dashboards, authentication, and chat sessions.
+2. **FastMCP Server (:8080):** A dedicated Model Context Protocol server exposing standard tools over Streamable-HTTP for modern agentic clients.
 
 ### 3. Security Engineering
 * **Session Management:** Built using `Flask-Login` with secure, HttpOnly session cookies.
 * **Password Hashing:** Enabled using `Werkzeug` secure salting and hashing.
 * **SQL Injection Prevention:** Implemented across all SQLite queries using parameterized parameters (`?`).
+* **Cross-Site Scripting (XSS) Prevention:** Handled by escaping input parameters in middleware sanitizers.
+* **Defensive Security Headers:** Attached on every response (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`).
+* **Rate Limiting:** Managed in-memory using an IP-based sliding window decorator preventing endpoint spamming.
+* **Role Based Authentication:** Restricts admin operations from student panels.
+
 * **Cross-Site Scripting (XSS) Prevention:** Handled by escaping input parameters in middleware sanitizers.
 * **Defensive Security Headers:** Attached on every response (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy`).
 * **Rate Limiting:** Managed in-memory using an IP-based sliding window decorator preventing endpoint spamming.
@@ -186,11 +293,12 @@ CampusMateAI/
 
 ## 🧪 Running the Test Suite
 
-We provide a comprehensive unittest suite containing 40 tests covering authentication, tenant isolation, tool schema validation, confirmation tokens, Amazon Bedrock Converse integration, multi-turn chat history, and planner boundaries. Run it using:
+We provide a comprehensive unittest suite containing 60 tests covering authentication, tenant isolation, tool schema validation, confirmation tokens, Amazon Bedrock Converse integration, multi-turn chat history, planner boundaries, FastMCP tools, and VoiceAgent orchestration. Run it using:
 ```bash
 python -m unittest discover -s tests
 ```
-*Expected: 40 tests passing (`OK`).*
+*Expected: 60 tests passing (`OK`).*
+
 
 ---
 
@@ -211,91 +319,4 @@ Follow this sequence to inspect the entire ecosystem:
 
 ## 📝 License
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
-
----
-
-## 🏆 Built for the Amazon Developer Hackathon (Alexa+ Track)
-
-This section documents the capabilities added to CampusMate AI specifically for the **Amazon Developer Hackathon (Alexa+ track)**. All existing capabilities (Flask REST, 8 agents, React dashboard, SQLite isolation) remain 100% operational alongside these new additions.
-
-### What Was Added
-
-| Component | Path | Description |
-|-----------|------|-------------|
-| **FastMCP Server** | [`backend/mcp_server.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/mcp_server.py) | Self-hosted MCP Server using official Python SDK (`FastMCP`), `streamable-http` transport, bearer-token auth (`MCP_AUTH_TOKEN`), wrapping 13 core tools + 4 new tools (`daily_briefing`, `calculate_cgpa`, `get_dashboard`, `get_timetable`). |
-| **MCP Start Script** | [`start_mcp.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/start_mcp.py) | Standalone launcher running on configurable `MCP_PORT` (default: 8080). |
-| **Alexa+ Web Simulator** | [`alexa-sim/index.html`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/alexa-sim/index.html) | Interactive web client featuring Web Speech API voice input, speech synthesis, glowing multi-state audio orb, real-time live transcript, and an live Tool Call Inspector showing streaming JSON-RPC payloads. |
-| **Alexa Agent Skill** | [`alexa-skill/skill.json`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/alexa-skill/skill.json) | Complete Alexa+ Agent Skill manifest with mapped utterances, slot types, intent schemas, and tool parameter definitions. |
-| **VoiceAgent Orchestrator** | [`backend/agents/voice_agent.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/agents/voice_agent.py) | Deterministic multi-step orchestrator chaining atomic tools into natural spoken replies (e.g. *"Plan my evening"* chains schedule + pending tasks + study planner). |
-| **Proactive Intelligence** | [`backend/services/proactive_service.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/services/proactive_service.py) | Rule-based engine computing attendance risk alerts (<75%), deadline conflicts within 48h, exam overlaps, and weekly performance reviews. |
-| **Proactive API Routes** | [`backend/routes/proactive_routes.py`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/backend/routes/proactive_routes.py) | REST endpoints for alerts, attendance risks, deadline conflicts, weekly summaries, and voice processing. |
-| **AWS Bedrock Guide** | [`docs/AWS.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/AWS.md) | Architectural setup guide for Amazon Bedrock Claude 3 Haiku / Converse API with offline fallback. |
-| **Submission Package** | `docs/` | Comprehensive hackathon documentation: [`PROJECT_DESCRIPTION.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/PROJECT_DESCRIPTION.md), [`DEMO_SCRIPT.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/DEMO_SCRIPT.md), [`PRODUCT_FEEDBACK.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/PRODUCT_FEEDBACK.md), [`FRICTION_LOG.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/FRICTION_LOG.md), and [`FEATURE_REQUESTS.md`](file:///c:/Users/Amman%20kumar%20D/Downloads/amazon/docs/FEATURE_REQUESTS.md). |
-
-### Hackathon Architecture
-
-```
-                                  +-----------------------------+
-                                  |   Alexa+ Voice Interaction  |
-                                  |   (Web Speech API / Echo)   |
-                                  +--------------+--------------+
-                                                 |
-                                                 v
-                       +-------------------------------------------------+
-                       |       Alexa+ Simulator / Alexa Agent Skill      |
-                       |       alexa-sim/index.html | skill.json         |
-                       +-------------------------+-----------------------+
-                                                 |
-                                 Streamable HTTP | (MCP Transport)
-                                                 v
-                       +-------------------------------------------------+
-                       |            FastMCP Server (:8080)               |
-                       |             backend/mcp_server.py               |
-                       +-------------------------+-----------------------+
-                                                 |
-                +--------------------------------+-------------------------------+
-                |                                |                               |
-                v                                v                               v
-     +--------------------+            +--------------------+          +--------------------+
-     |  Domain Services   |            |  Voice Orchestrator|          | Proactive Engine   |
-     |  - task_service    |            |  voice_agent.py    |          | proactive_service  |
-     |  - attendance_serv |            |  (multi-step tool  |          | - attendance risk  |
-     |  - schedule_service|            |   chains)          |          | - deadline conflict|
-     |  - exam_service    |            +--------------------+          | - weekly summary   |
-     +----------+---------+                                            +----------+---------+
-                |                                                                 |
-                +--------------------------------+--------------------------------+
-                                                 |
-                                                 v
-                               +-----------------------------------+
-                               |     SQLite Database Repository    |
-                               |    backend/database/campusmate.db |
-                               +-----------------------------------+
-```
-
-### Quick Start: Running the Hackathon Features
-
-1. **Launch the Flask Backend (Terminal 1):**
-   ```bash
-   python backend/app.py
-   ```
-   *Runs REST API on `http://localhost:5000`.*
-
-2. **Launch the FastMCP Server (Terminal 2):**
-   ```bash
-   python start_mcp.py
-   ```
-   *Runs Streamable HTTP MCP Server on `http://localhost:8080/mcp`.*
-
-3. **Launch the Alexa+ Web Simulator (Terminal 3):**
-   ```bash
-   cd alexa-sim
-   python -m http.server 3001
-   ```
-   *Open `http://localhost:3001` in Chrome or Edge. Click the microphone orb or press spacebar to issue voice commands like "Plan my evening" or "Good morning, give me my daily briefing".*
-
-4. **Run the Full Test Suite (Existing 40 + New Tests):**
-   ```bash
-   python -m unittest discover -s tests
-   ```
 

@@ -115,8 +115,8 @@ ask configure
 
 ### Step 2: Deploy Skill Manifest & Interaction Model
 Deploy `alexa-skill/skill.json` to your Amazon Developer account:
-```powershell
-cd "c:\Users\Amman kumar D\Downloads\amazon"
+```bash
+# From the project root:
 ask deploy --target skill-manifest
 ask deploy --target model
 ```
@@ -143,10 +143,11 @@ ask deploy --target model
 
 Before deploying to physical Echo hardware, use the included **CampusMate Alexa+ Simulator**:
 
-```powershell
-# Open the web simulator in any browser:
-Start-Process "c:\Users\Amman kumar D\Downloads\amazon\alexa-sim\index.html"
+```bash
+# Serve or open the web simulator in any browser:
+python -m http.server 3001 --directory alexa-sim
 ```
+
 
 The simulator features:
 - **SpeechRecognition & SpeechSynthesis**: Real voice-in / voice-out testing with customizable synthetic voices.
