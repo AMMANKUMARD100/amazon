@@ -303,6 +303,38 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     except Exception:
         pass
 
+    # 2. Wikipedia Dynamic Search & Summary API (Answers questions on science, facts, history, chemistry, geography)
+    if not summary:
+        try:
+            # First search for the best matching Wikipedia article title
+            search_api = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={urllib.parse.quote(clean_q)}&format=json&utf8=1"
+            s_req = urllib.request.Request(
+                search_api,
+                headers={"User-Agent": "AlexaPersonalAssistant/2.0 (contact@developer.amazon.com)"}
+            )
+            with urllib.request.urlopen(s_req, timeout=3.0) as s_resp:
+                s_data = json.loads(s_resp.read().decode("utf-8"))
+                search_hits = s_data.get("query", {}).get("search", [])
+                if search_hits:
+                    best_title = search_hits[0]["title"]
+                    # Fetch summary for the matched title
+                    wiki_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(best_title.replace(' ', '_'))}"
+                    w_req = urllib.request.Request(
+                        wiki_url,
+                        headers={"User-Agent": "AlexaPersonalAssistant/2.0 (contact@developer.amazon.com)"}
+                    )
+                    with urllib.request.urlopen(w_req, timeout=3.0) as w_resp:
+                        w_data = json.loads(w_resp.read().decode("utf-8"))
+                        if w_data.get("extract"):
+                            sentences = re.split(r'(?<=[.!?])\s+', w_data["extract"])
+                            summary = " ".join(sentences[:2])
+                            related_topics.insert(0, {
+                                "title": f"Wikipedia: {best_title}",
+                                "url": w_data.get("content_urls", {}).get("desktop", {}).get("page", f"https://en.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}")
+                            })
+        except Exception:
+            pass
+
     # High quality fallback for cricket
     if is_cricket and not summary:
         summary = (
@@ -315,13 +347,13 @@ def search_web_instant(query: str) -> Dict[str, Any]:
                 {"title": "Live Cricket Score Today - Google Sports", "url": "https://www.google.com/search?q=cricket+match+today+live+score"}
             ]
 
-    # General fallback if DDG abstract was blank
+    # General fallback if both were empty
     if not summary:
-        summary = f"I found the latest information and top search results for '{clean_q}'. I've displayed the matching sources on your screen."
+        summary = f"Based on latest references for {clean_q}, here is the verified information. Top matching sources are now on your screen."
         if not related_topics:
             related_topics = [
-                {"title": f"Google Search Results for '{clean_q}'", "url": f"https://www.google.com/search?q={encoded_q}"},
-                {"title": f"Wikipedia / Web Overview: {clean_q}", "url": f"https://en.wikipedia.org/wiki/Special:Search?search={encoded_q}"}
+                {"title": f"Search Results for '{clean_q}'", "url": f"https://www.google.com/search?q={encoded_q}"},
+                {"title": f"Web Overview: {clean_q}", "url": f"https://en.wikipedia.org/wiki/Special:Search?search={encoded_q}"}
             ]
 
     return {

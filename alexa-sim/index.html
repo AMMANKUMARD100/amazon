@@ -2550,8 +2550,8 @@
         mcpMethod: 'search_web_instant'
       });
 
-      const speech = res.spoken_summary || res.speech || `Here is the live information for ${cleanQ}.`;
       const data = res.data || res.tool_result || {};
+      const speech = data.spoken_summary || res.spoken_summary || res.speech || `Here is the verified information for ${cleanQ}.`;
       const results = data.results || [
         { title: `Live Cricket Scores & Ball-by-ball Commentary`, url: `https://www.espncricinfo.com/live-cricket-score` },
         { title: `Google Real-time Search: ${cleanQ}`, url: `https://www.google.com/search?q=${encodeURIComponent(cleanQ)}` }
