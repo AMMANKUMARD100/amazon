@@ -2391,17 +2391,29 @@
       }
 
       // Science, Chemistry & General Facts
+      if (q.includes('king of chemicals') || q.includes('king of chemical')) {
+        return "Sulfuric acid (H2SO4) is known as the king of chemicals because it is one of the most widely used industrial chemicals in the world.";
+      }
       if (q.includes('glucose') && (q.includes('formula') || q.includes('chemical'))) {
         return "The chemical formula for glucose is C6H12O6.";
       }
       if (q.includes('water') && (q.includes('formula') || q.includes('chemical'))) {
         return "The chemical formula for water is H2O.";
       }
+      if (q.includes('hydrochloric acid') || q.includes('muriatic acid')) {
+        return "The chemical formula for hydrochloric acid is HCl.";
+      }
+      if (q.includes('gravity') && (q.includes('who') || q.includes('discovered'))) {
+        return "Sir Isaac Newton discovered the universal law of gravitation in 1687.";
+      }
       if (q.includes('speed of light')) {
         return "The speed of light in vacuum is approximately 299,792,458 meters per second, or about 300,000 kilometers per second.";
       }
       if (q.includes('capital of india')) {
         return "The capital of India is New Delhi.";
+      }
+      if (q.includes('capital of france')) {
+        return "The capital of France is Paris.";
       }
 
       return null;
@@ -2578,7 +2590,7 @@
       }
 
       if (!speech) {
-        speech = `According to verified web sources, here are the top matching results for ${cleanQ}.`;
+        speech = "I didn't quite catch that. Could you please repeat your question again?";
       }
 
       const results = (data.results && data.results.length > 0) ? data.results : [

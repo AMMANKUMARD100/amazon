@@ -302,30 +302,39 @@ def run_deterministic_engine(student_id, utterance):
                 "mode": "deterministic_demo"
             }
 
-    # 11. FAQ search
-    out_faq = execute_tool("search_faq", student_id, {"query": utterance})
-    faq_results = out_faq.get("result", []) if out_faq["success"] else []
-    if faq_results:
-        best = faq_results[0]
-        speech = best['answer']
+    # 11. FAQ search (Only for specific campus policies)
+    if any(k in text for k in ["curfew", "hostel", "warden", "campus rule", "mess fee", "library timing", "block c", "block d"]):
+        out_faq = execute_tool("search_faq", student_id, {"query": utterance})
+        faq_results = out_faq.get("result", []) if out_faq["success"] else []
+        if faq_results:
+            best = faq_results[0]
+            speech = best['answer']
+            return {
+                "speech": speech,
+                "card": {"title": best['question'], "content": speech},
+                "action_executed": "search_faq",
+                "tool_result": faq_results,
+                "mode": "deterministic_demo"
+            }
+
+    # 12. General Knowledge & Universal Web Search (e.g. "king of chemicals", "who discovered gravity", science facts)
+    from backend.services.assistant_service import search_web_instant
+    res_web = search_web_instant(utterance)
+    if res_web and res_web.get("spoken_summary"):
         return {
-            "speech": speech,
-            "card": {"title": best['question'], "content": speech},
-            "action_executed": "search_faq",
-            "tool_result": faq_results,
+            "speech": res_web["spoken_summary"],
+            "card": {"title": f"Answer: {utterance}", "content": res_web["spoken_summary"]},
+            "action_executed": "search_web_instant",
+            "tool_result": res_web,
             "mode": "deterministic_demo"
         }
 
-    # Default fallback
-    speech = (
-        "I am your Alexa+ Personal Assistant. You can ask me to schedule meetings, "
-        "remind you of today's events, open YouTube or Google, search live cricket scores, "
-        "plan a vacation trip, or check your assignments and attendance."
-    )
+    # Default fallback - Safety measure if query was unclear
+    speech = "I didn't quite catch that. Could you please repeat your question again?"
     return {
         "speech": speech,
-        "card": {"title": "Alexa+ Assistant", "content": speech},
-        "action_executed": "help",
+        "card": {"title": "Alexa Assistant", "content": speech},
+        "action_executed": "clarify",
         "mode": "deterministic_demo"
     }
 
