@@ -291,11 +291,14 @@ def search_web_instant(query: str) -> Dict[str, Any]:
         ql = re.sub(typo, corrected, ql)
 
     # Conversational & Feelings
+    wants_detail = any(k in ql for k in ["detail", "explain", "history of", "in detail", "describe"])
     if any(k in ql for k in ["how are you", "how do you do", "how's it going"]):
         direct = "I am fine, thank you! How can I help you today?"
     elif any(k in ql for k in ["who are you", "what is your name"]):
         direct = "I am your Alexa Personal Assistant. I can answer any question, open applications, search YouTube, schedule meetings, and help you with daily tasks."
     # History & Leaders
+    elif "trump" in ql and any(k in ql for k in ["companies", "business", "owns", "owned"]):
+        direct = "Donald Trump's key business ventures operate under The Trump Organization, including Trump International Hotels, Trump Golf, Trump Media & Technology Group (Truth Social), and Trump Tower."
     elif ("first" in ql or "1st" in ql) and "prime minister" in ql and "india" in ql:
         direct = "Jawaharlal Nehru was the first Prime Minister of India, serving from 1947 until 1964."
     elif "current prime minister" in ql and "india" in ql or ("prime minister of india" in ql and "first" not in ql):
@@ -305,8 +308,7 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     elif ("first" in ql or "1st" in ql) and "president" in ql and "india" in ql:
         direct = "Dr. Rajendra Prasad was the first President of India."
     # Wars & Conflicts
-    wants_detail = any(k in ql for k in ["detail", "explain", "history of", "in detail", "describe"])
-    if "1965" in ql and ("war" in ql or "conflict" in ql or "india" in ql):
+    elif "1965" in ql and ("war" in ql or "conflict" in ql or "india" in ql):
         if wants_detail:
             direct = "In the 1965 war between India and Pakistan, India gained the upper hand militarily and defended Jammu and Kashmir, capturing strategic territory before a UN ceasefire and the Tashkent Declaration were signed."
         else:
@@ -381,6 +383,13 @@ def search_web_instant(query: str) -> Dict[str, Any]:
         direct = "England won the 2019 Cricket World Cup, defeating New Zealand in a dramatic final at Lord's decided by a boundary count after a Super Over."
     elif "2007" in ql and "t20" in ql and ("world cup" in ql or "cricket" in ql):
         direct = "India won the inaugural ICC T20 World Cup in 2007, defeating Pakistan by 5 runs in the final in Johannesburg."
+    # Cricket Titles & Legends
+    elif "king of cricket" in ql or ("king" in ql and "cricket" in ql and any(k in ql for k in ["who", "player"])):
+        direct = "Virat Kohli is widely known and hailed across the world as the 'King of Cricket'."
+    elif "god of cricket" in ql:
+        direct = "Sachin Tendulkar is revered as the 'God of Cricket' for his unmatched career and 100 international centuries."
+    elif "captain cool" in ql:
+        direct = "MS Dhoni is known as 'Captain Cool' for his calm and composed leadership in high-pressure matches."
     # IPL Winners
     elif "ipl" in ql and "2024" in ql and any(k in ql for k in ["who won", "winner", "champion"]):
         direct = "Kolkata Knight Riders won IPL 2024, defeating Sunrisers Hyderabad by 8 wickets in the final."

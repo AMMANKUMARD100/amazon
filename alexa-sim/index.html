@@ -2491,6 +2491,9 @@
       }
 
       // History & Leaders
+      if (q.includes('trump') && (q.includes('companies') || q.includes('business') || q.includes('owns') || q.includes('owned'))) {
+        return "Donald Trump's key business ventures operate under The Trump Organization, including Trump International Hotels, Trump Golf, Trump Media & Technology Group (Truth Social), and Trump Tower.";
+      }
       if ((q.includes('first') || q.includes('1st')) && q.includes('prime minister') && q.includes('india')) {
         return "Jawaharlal Nehru was the first Prime Minister of India, serving from 1947 until 1964.";
       }
@@ -2627,6 +2630,17 @@
       }
       if (q.includes('2007') && q.includes('t20') && (q.includes('world cup') || q.includes('cricket'))) {
         return "India won the inaugural ICC T20 World Cup in 2007, defeating Pakistan by 5 runs in the final in Johannesburg.";
+      }
+
+      // Cricket Titles & Legends
+      if (q.includes('king of cricket') || (q.includes('king') && q.includes('cricket') && (q.includes('who') || q.includes('player')))) {
+        return "Virat Kohli is widely known and hailed across the world as the 'King of Cricket'.";
+      }
+      if (q.includes('god of cricket')) {
+        return "Sachin Tendulkar is revered as the 'God of Cricket' for his unmatched career and 100 international centuries.";
+      }
+      if (q.includes('captain cool')) {
+        return "MS Dhoni is known as 'Captain Cool' for his calm and composed leadership in high-pressure matches.";
       }
 
       // IPL Winners
