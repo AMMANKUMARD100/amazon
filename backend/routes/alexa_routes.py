@@ -528,6 +528,28 @@ def handle_direct_intent():
             "data": {"contact": contact, "url": wa_url}
         }), 200
 
+    # If LLM_PROVIDER is configured as 'bedrock', invoke Amazon Bedrock Converse API with strict precision
+    from backend.config import Config
+    if getattr(Config, 'LLM_PROVIDER', 'demo') == 'bedrock':
+        try:
+            from backend.llm.agent_loop import AgentLoop
+            loop = AgentLoop(student_id=student_id)
+            loop_res = loop.run_turn(utterance)
+            if loop_res and loop_res.get("speech"):
+                speech = loop_res["speech"]
+                return jsonify({
+                    "speech": speech,
+                    "spoken_response": speech,
+                    "card": {"title": "Alexa+ Assistant", "content": speech},
+                    "action_executed": "bedrock_converse",
+                    "tool_result": loop_res.get("tool_calls_executed", []),
+                    "data": {"provider": "Amazon Bedrock (Claude 3 Haiku)"},
+                    "mode": "bedrock"
+                }), 200
+        except Exception:
+            # Seamless fallback to offline dynamic extractor
+            pass
+
     result = run_deterministic_engine(student_id, utterance)
     # Ensure spoken_response and data fields match frontend expectations
     result["spoken_response"] = result.get("speech", "")
