@@ -39,7 +39,25 @@ def handle_app_error(err):
 def run_deterministic_engine(student_id, utterance):
     """Deterministic intent parser delegating to unified tool_registry."""
     from backend.tools import execute_tool, tool_registry
+    from backend.services.assistant_service import search_web_instant
     text = utterance.lower().strip()
+
+    # 0. Check instant general knowledge query directly first (e.g. "what is capital of usa", "who won kargil war", "how are you")
+    res_direct = search_web_instant(utterance)
+    if res_direct and res_direct.get("spoken_summary") and not res_direct.get("is_cricket") and not res_direct.get("spoken_summary").startswith("Based on latest references"):
+        # If it was resolved by direct facts (not generic search fallback)
+        if any(w in text for w in [
+            "capital", "prime minister", "president", "kargil", "world war", 
+            "glucose", "chemical", "formula", "gravity", "speed of light", "how are you", 
+            "who are you", "king of chemical"
+        ]):
+            return {
+                "speech": res_direct["spoken_summary"],
+                "card": {"title": f"Answer: {utterance}", "content": res_direct["spoken_summary"]},
+                "action_executed": "general_knowledge",
+                "tool_result": res_direct,
+                "mode": "deterministic_demo"
+            }
 
     # 1. Complete task intent
     complete_match = re.search(r"^(?:complete|finish|mark done|done)\s+(?:task|assignment)?\s*(.+)$", text)

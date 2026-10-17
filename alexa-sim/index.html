@@ -2355,6 +2355,13 @@
         [/\bglusose\b/gi, 'glucose'],
         [/\bchecmical\b/gi, 'chemical'],
         [/\bformla\b/gi, 'formula'],
+        [/\bcptal\b/gi, 'capital'],
+        [/\bcaptial\b/gi, 'capital'],
+        [/\bcapitol\b/gi, 'capital'],
+        [/\bprimeminister\b/gi, 'prime minister'],
+        [/\bprimeminster\b/gi, 'prime minister'],
+        [/\bminiter\b/gi, 'minister'],
+        [/\bkargil\b/gi, 'kargil'],
         [/\btarak\b/gi, 'taarak'],
         [/\btarak mehta\b/gi, 'taarak mehta ka ooltah chashmah'],
         [/\btaarak mehta\b/gi, 'taarak mehta ka ooltah chashmah'],
@@ -2390,6 +2397,63 @@
         return "You're welcome! Let me know if you need anything else.";
       }
 
+      // History & Leaders
+      if ((q.includes('first') || q.includes('1st')) && q.includes('prime minister') && q.includes('india')) {
+        return "Jawaharlal Nehru was the first Prime Minister of India, serving from 1947 until 1964.";
+      }
+      if (q.includes('current prime minister') && q.includes('india') || (q.includes('prime minister of india') && !q.includes('first'))) {
+        return "The Prime Minister of India is Narendra Modi.";
+      }
+      if ((q.includes('first') || q.includes('1st')) && q.includes('president') && (q.includes('usa') || q.includes('united states') || q.includes('america'))) {
+        return "George Washington was the first President of the United States.";
+      }
+      if ((q.includes('first') || q.includes('1st')) && q.includes('president') && q.includes('india')) {
+        return "Dr. Rajendra Prasad was the first President of India.";
+      }
+
+      // Wars & Military History
+      if (q.includes('kargil') && (q.includes('who won') || q.includes('won') || q.includes('result') || q.includes('winner'))) {
+        return "India won the Kargil War in 1999, successfully regaining control of all infiltrated territory from Pakistan under Operation Vijay.";
+      }
+      if (q.includes('who won') && (q.includes('world war 2') || q.includes('world war ii') || q.includes('second world war'))) {
+        return "The Allied Powers—led by Great Britain, the United States, the Soviet Union, and China—won World War II in 1945.";
+      }
+      if (q.includes('who won') && (q.includes('world war 1') || q.includes('world war i') || q.includes('first world war'))) {
+        return "The Allied Powers—including France, the British Empire, Russia, the United States, and Italy—won World War I in 1918.";
+      }
+
+      // Capitals
+      if (q.includes('capital') && (q.includes('usa') || q.includes('united states') || q.includes('america') || q.includes('u.s.a') || q.includes('u.s.'))) {
+        return "The capital city of the United States is Washington, D.C.";
+      }
+      if (q.includes('capital') && q.includes('india')) {
+        return "The capital of India is New Delhi.";
+      }
+      if (q.includes('capital') && q.includes('france')) {
+        return "The capital of France is Paris.";
+      }
+      if (q.includes('capital') && (q.includes('uk') || q.includes('united kingdom') || q.includes('england') || q.includes('britain'))) {
+        return "The capital of the United Kingdom is London.";
+      }
+      if (q.includes('capital') && q.includes('japan')) {
+        return "The capital of Japan is Tokyo.";
+      }
+      if (q.includes('capital') && q.includes('russia')) {
+        return "The capital of Russia is Moscow.";
+      }
+      if (q.includes('capital') && q.includes('germany')) {
+        return "The capital of Germany is Berlin.";
+      }
+      if (q.includes('capital') && q.includes('china')) {
+        return "The capital of China is Beijing.";
+      }
+      if (q.includes('capital') && q.includes('australia')) {
+        return "The capital of Australia is Canberra.";
+      }
+      if (q.includes('capital') && q.includes('canada')) {
+        return "The capital of Canada is Ottawa.";
+      }
+
       // Science, Chemistry & General Facts
       if (q.includes('king of chemicals') || q.includes('king of chemical')) {
         return "Sulfuric acid (H2SO4) is known as the king of chemicals because it is one of the most widely used industrial chemicals in the world.";
@@ -2400,6 +2464,9 @@
       if (q.includes('water') && (q.includes('formula') || q.includes('chemical'))) {
         return "The chemical formula for water is H2O.";
       }
+      if (q.includes('salt') && (q.includes('formula') || q.includes('chemical'))) {
+        return "The chemical formula for common table salt is NaCl (Sodium Chloride).";
+      }
       if (q.includes('hydrochloric acid') || q.includes('muriatic acid')) {
         return "The chemical formula for hydrochloric acid is HCl.";
       }
@@ -2408,12 +2475,6 @@
       }
       if (q.includes('speed of light')) {
         return "The speed of light in vacuum is approximately 299,792,458 meters per second, or about 300,000 kilometers per second.";
-      }
-      if (q.includes('capital of india')) {
-        return "The capital of India is New Delhi.";
-      }
-      if (q.includes('capital of france')) {
-        return "The capital of France is Paris.";
       }
 
       return null;
@@ -2566,30 +2627,36 @@
       let speech = data.spoken_summary || res.spoken_summary || res.speech || '';
 
       // If speech is generic or missing, analyze the question dynamically in the browser:
-      if (!speech || speech.includes('Based on latest references') || speech.includes('Here is the live information') || speech.includes('Here is the verified information')) {
-        try {
-          const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}&format=json&origin=*`;
-          const sResp = await fetch(sUrl);
-          const sJson = await sResp.json();
-          if (sJson.query && sJson.query.search && sJson.query.search.length > 0) {
-            const hit = sJson.query.search[0];
-            const title = hit.title;
-            const pUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`;
-            const pResp = await fetch(pUrl);
-            const pJson = await pResp.json();
-            if (pJson.extract) {
-              const sentences = pJson.extract.split(/(?<=[.!?])\s+/);
-              speech = sentences.slice(0, 2).join(' ');
-            } else if (hit.snippet) {
-              speech = hit.snippet.replace(/<[^>]*>/g, '').trim();
+      if (!speech || speech.includes('Based on latest references') || speech.includes('Here is the live information') || speech.includes('Here is the verified information') || speech.includes("I didn't quite catch that")) {
+        // First try the enhanced factual knowledge dictionary
+        const directFact = answerGeneralKnowledge(utterance) || answerGeneralKnowledge(cleanQ);
+        if (directFact) {
+          speech = directFact;
+        } else {
+          try {
+            const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}&format=json&origin=*`;
+            const sResp = await fetch(sUrl);
+            const sJson = await sResp.json();
+            if (sJson.query && sJson.query.search && sJson.query.search.length > 0) {
+              const hit = sJson.query.search[0];
+              const title = hit.title;
+              const pUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`;
+              const pResp = await fetch(pUrl);
+              const pJson = await pResp.json();
+              if (pJson.extract) {
+                const sentences = pJson.extract.split(/(?<=[.!?])\s+/);
+                speech = sentences.slice(0, 2).join(' ');
+              } else if (hit.snippet) {
+                speech = hit.snippet.replace(/<[^>]*>/g, '').trim();
+              }
             }
+          } catch (e) {
+            // Keep best effort
           }
-        } catch (e) {
-          // Keep best effort
         }
       }
 
-      if (!speech) {
+      if (!speech || speech.length < 5) {
         speech = "I didn't quite catch that. Could you please repeat your question again?";
       }
 
