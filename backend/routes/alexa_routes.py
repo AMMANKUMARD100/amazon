@@ -448,3 +448,62 @@ def simulate_alexa():
     )
 
     return jsonify(alexa_response), 200
+
+
+@alexa_bp.route('/intent', methods=['POST'])
+def handle_direct_intent():
+    """Direct intent resolution for Alexa+ Simulator without requiring prior cookie login."""
+    data = request.get_json() or {}
+    utterance = sanitize_input(data.get("utterance", "")).strip()
+    if not utterance:
+        return jsonify({"error": "ValidationFailed", "message": "Utterance is required."}), 400
+
+    student_id = 1
+    if current_user.is_authenticated and hasattr(current_user, 'student_id') and current_user.student_id:
+        student_id = current_user.student_id
+
+    # Handle Calls (e.g. "call papa")
+    clean_low = utterance.lower()
+    if clean_low.startswith("call ") or " call " in clean_low:
+        m = re.search(r"call\s+([a-zA-Z\s]+)", utterance, re.IGNORECASE)
+        contact = m.group(1).strip() if m else "Contact"
+        speech = f"Searching for '{contact}' in your contacts. Dialing {contact} now."
+        return jsonify({
+            "speech": speech,
+            "spoken_response": speech,
+            "card": {"title": f"Calling {contact}", "content": speech},
+            "action_executed": "call_contact",
+            "tool_result": {"contact": contact, "status": "dialing", "url": f"tel:{contact}"},
+            "data": {"contact": contact, "url": f"tel:{contact}"}
+        }), 200
+
+    # Handle WhatsApp message (e.g. "open whatsapp in chrome browser and send message to mummy go to chennai")
+    if "whatsapp" in clean_low and ("send message" in clean_low or "message" in clean_low):
+        contact_match = re.search(r"(?:to|contact)\s+([a-zA-Z]+)", utterance, re.IGNORECASE)
+        contact = contact_match.group(1).strip() if contact_match else "Mummy"
+        msg_match = re.search(r"(?:message|saying|text)\s+(?:to\s+[a-zA-Z]+\s+)?(.+)$", utterance, re.IGNORECASE)
+        msg_text = msg_match.group(1).strip() if msg_match else "Hello"
+        import urllib.parse
+        encoded_msg = urllib.parse.quote(msg_text)
+        wa_url = f"https://web.whatsapp.com/send?text={encoded_msg}"
+        import webbrowser
+        try:
+            webbrowser.open(wa_url)
+        except Exception:
+            pass
+        speech = f"Opening WhatsApp in Chrome to send message '{msg_text}' to {contact}."
+        return jsonify({
+            "speech": speech,
+            "spoken_response": speech,
+            "card": {"title": f"WhatsApp: {contact}", "content": f"Message: {msg_text}"},
+            "action_executed": "send_whatsapp",
+            "tool_result": {"contact": contact, "message": msg_text, "url": wa_url},
+            "data": {"contact": contact, "url": wa_url}
+        }), 200
+
+    result = run_deterministic_engine(student_id, utterance)
+    # Ensure spoken_response and data fields match frontend expectations
+    result["spoken_response"] = result.get("speech", "")
+    result["data"] = result.get("tool_result", {})
+    return jsonify(result), 200
+

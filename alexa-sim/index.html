@@ -2475,6 +2475,12 @@
         if (qm) query = qm[1].trim();
       }
 
+      // Open window immediately while user gesture context is alive (prevents Chrome popup blocker)
+      let openedWin = null;
+      try {
+        openedWin = window.open('about:blank', '_blank');
+      } catch (e) {}
+
       highlightFlowNode('flowTool');
       const mcpArgs = { student_id: CONFIG.studentId, target: target, query: query };
       const res = await invokeToolDispatcher(toolName, mcpArgs, {
@@ -2485,23 +2491,26 @@
       });
 
       const speech = res.spoken_response || res.speech || `Opening ${target.toUpperCase()} for you now.`;
-      const appUrl = (res.data && res.data.url) || (res.tool_result && res.tool_result.url) || `https://${target}.com`;
+      let appUrl = (res.data && res.data.url) || (res.tool_result && res.tool_result.url);
+      if (!appUrl) {
+        if (target === 'youtube') {
+          appUrl = query ? `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}` : 'https://www.youtube.com';
+        } else if (target === 'google') {
+          appUrl = query ? `https://www.google.com/search?q=${encodeURIComponent(query)}` : 'https://www.google.com';
+        } else {
+          appUrl = `https://${target}.com`;
+        }
+      }
 
-      // Trigger immediate browser tab opening
+      // Navigate the opened window or fallback directly
       try {
-        const openedWin = window.open(appUrl, '_blank', 'noopener,noreferrer');
-        if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
-          // Fallback if browser blocked popup: location.assign or create link click
-          const a = document.createElement('a');
-          a.href = appUrl;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
+        if (openedWin && !openedWin.closed) {
+          openedWin.location.href = appUrl;
+        } else {
+          window.location.assign(appUrl);
         }
       } catch (e) {
-        window.location.href = appUrl;
+        window.location.assign(appUrl);
       }
 
       const cardHtml = `
