@@ -2634,6 +2634,143 @@
         return "Jawan collected approximately 1150 crores at the worldwide box office.";
       }
 
+      // -------------------------------------------------------------
+      // Multi-Domain Precise Knowledge Resolver (Engineering, Coding, Biotech, Space, School Syllabus)
+      // -------------------------------------------------------------
+
+      // 1. Coding & Computer Science
+      if (q.includes('time complexity') && (q.includes('binary search') || q.includes('bin search'))) {
+        return wantsDetail ? "The time complexity of binary search is O(log n) in the best, average, and worst cases for sorted arrays because the search space is halved in each step." : "The time complexity of binary search is O(log n).";
+      }
+      if (q.includes('time complexity') && (q.includes('merge sort') || q.includes('mergesort'))) {
+        return wantsDetail ? "Merge sort has a time complexity of O(n log n) in best, worst, and average cases, using divide-and-conquer with O(n) auxiliary space." : "The time complexity of merge sort is O(n log n).";
+      }
+      if (q.includes('time complexity') && (q.includes('quick sort') || q.includes('quicksort'))) {
+        return wantsDetail ? "Quick sort has an average time complexity of O(n log n), but degrades to O(n^2) in the worst case when the pivot is poorly chosen." : "The average time complexity of quick sort is O(n log n), and worst case is O(n^2).";
+      }
+      if ((q.includes('what is python') || q.includes('define python')) && !q.includes('snake')) {
+        return "Python is a high-level, interpreted, dynamically-typed programming language created by Guido van Rossum in 1991.";
+      }
+      if (q.includes('what is polymorphism') || q.includes('define polymorphism')) {
+        return "Polymorphism is an object-oriented programming concept where a single interface or method can take multiple forms, typically through method overriding or overloading.";
+      }
+      if (q.includes('what is encapsulation') || q.includes('define encapsulation')) {
+        return "Encapsulation is the bundling of data and the methods that operate on that data into a single unit or class, restricting direct access to internal components.";
+      }
+      if (q.includes('what is inheritance') || q.includes('define inheritance')) {
+        return "Inheritance is an OOP mechanism where a child class acquires properties and behaviors from a parent class, promoting code reusability.";
+      }
+      if (q.includes('sql') && (q.includes('stand for') || q.includes('full form') || q.includes('meaning'))) {
+        return "SQL stands for Structured Query Language, used for managing and querying relational databases.";
+      }
+      if (q.includes('html') && (q.includes('stand for') || q.includes('full form'))) {
+        return "HTML stands for HyperText Markup Language, the standard markup language for creating web pages.";
+      }
+      if (q.includes('ram') && (q.includes('stand for') || q.includes('full form'))) {
+        return "RAM stands for Random Access Memory, high-speed volatile primary memory used by CPUs.";
+      }
+      if (q.includes('cpu') && (q.includes('stand for') || q.includes('full form'))) {
+        return "CPU stands for Central Processing Unit, the primary electronic component that executes instructions.";
+      }
+
+      // 2. Space & Astronomy
+      if (q.includes('chandrayaan 3') || q.includes('chandrayaan-3')) {
+        if (q.includes('who') || q.includes('country') || q.includes('land')) {
+          return "India became the first nation to successfully land near the lunar south pole with Chandrayaan-3 on August 23, 2023.";
+        }
+        return "Chandrayaan-3 is India's successful third lunar exploration mission, which landed on the Moon's south pole on August 23, 2023.";
+      }
+      if (q.includes('closest planet to the sun') || q.includes('first planet from the sun')) {
+        return "Mercury is the closest planet to the Sun.";
+      }
+      if (q.includes('largest planet') && (q.includes('solar system') || q.includes('universe'))) {
+        return "Jupiter is the largest planet in our solar system.";
+      }
+      if (q.includes('hottest planet') && q.includes('solar system')) {
+        return "Venus is the hottest planet in our solar system, with surface temperatures around 465 degrees Celsius.";
+      }
+      if (q.includes('red planet')) {
+        return "Mars is known as the Red Planet due to iron oxide (rust) on its surface.";
+      }
+      if (q.includes('first man on the moon') || q.includes('first person on the moon')) {
+        return "Neil Armstrong was the first person to walk on the Moon, during NASA's Apollo 11 mission on July 20, 1969.";
+      }
+      if (q.includes('first human in space') || q.includes('first person in space')) {
+        return "Yuri Gagarin was the first human in space, orbiting Earth aboard Vostok 1 on April 12, 1961.";
+      }
+      if (q.includes('first indian in space')) {
+        return "Wing Commander Rakesh Sharma was the first Indian in space, flying aboard Soyuz T-11 on April 3, 1984.";
+      }
+
+      // 3. Biotechnology & Biology
+      if (q.includes('dna') && (q.includes('stand for') || q.includes('full form'))) {
+        return "DNA stands for Deoxyribonucleic Acid, the molecule carrying genetic instructions for life.";
+      }
+      if (q.includes('rna') && (q.includes('stand for') || q.includes('full form'))) {
+        return "RNA stands for Ribonucleic Acid, which translates genetic code from DNA into proteins.";
+      }
+      if (q.includes('crispr') && (q.includes('what is') || q.includes('stand for') || q.includes('meaning'))) {
+        return wantsDetail ? "CRISPR-Cas9 is a revolutionary gene-editing technology derived from bacterial antiviral defenses, allowing scientists to precisely cut and modify DNA sequences." : "CRISPR-Cas9 is a precision gene-editing technology used to modify DNA sequences in living organisms.";
+      }
+      if (q.includes('powerhouse of the cell') || q.includes('power house of the cell')) {
+        return "Mitochondria is the powerhouse of the cell because it generates cellular chemical energy in the form of ATP.";
+      }
+      if (q.includes('father of genetics')) {
+        return "Gregor Mendel is recognized as the father of genetics for his discovery of the fundamental laws of inheritance.";
+      }
+      if (q.includes('pcr') && (q.includes('stand for') || q.includes('full form'))) {
+        return "PCR stands for Polymerase Chain Reaction, a laboratory technique used to amplify specific DNA sequences rapidly.";
+      }
+      if (q.includes('central dogma') && (q.includes('biology') || q.includes('molecular'))) {
+        return "The central dogma of molecular biology describes the flow of genetic information: DNA to RNA via transcription, and RNA to protein via translation.";
+      }
+      if (q.includes('how many chromosomes') && (q.includes('human') || q.includes('man'))) {
+        return "Humans have 46 chromosomes in 23 pairs.";
+      }
+
+      // 4. Engineering & Physics
+      if (q.includes('ohm') && (q.includes('law') || q.includes("ohm's law"))) {
+        return wantsDetail ? "Ohm's Law states that current (I) flowing through a conductor is directly proportional to voltage (V) and inversely proportional to resistance (R), expressed as V = I * R." : "Ohm's Law states that Voltage equals Current multiplied by Resistance: V = I * R.";
+      }
+      if (q.includes('newton') && (q.includes('first law') || q.includes('1st law'))) {
+        return "Newton's First Law of Motion (Law of Inertia) states that an object remains at rest or in uniform straight-line motion unless acted upon by an external net force.";
+      }
+      if (q.includes('newton') && (q.includes('second law') || q.includes('2nd law'))) {
+        return "Newton's Second Law of Motion states that force equals mass times acceleration: F = m * a.";
+      }
+      if (q.includes('newton') && (q.includes('third law') || q.includes('3rd law'))) {
+        return "Newton's Third Law of Motion states that for every action, there is an equal and opposite reaction.";
+      }
+      if (q.includes('thermodynamics') && (q.includes('first law') || q.includes('1st law'))) {
+        return "The First Law of Thermodynamics states that energy cannot be created or destroyed, only transformed from one form to another.";
+      }
+      if (q.includes('bernoulli') && q.includes('principle')) {
+        return "Bernoulli's principle states that an increase in the speed of a fluid occurs simultaneously with a decrease in pressure or potential energy.";
+      }
+
+      // 5. Mathematics & School Syllabus
+      if (q.includes('pythagoras') || q.includes('pythagorean theorem')) {
+        return "The Pythagorean theorem states that in a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides: a^2 + b^2 = c^2.";
+      }
+      if (q.includes('value of pi') || q.includes('value of π')) {
+        return "The value of pi is approximately 3.14159, or 22/7 as a fraction.";
+      }
+      if (q.includes('atomic number of carbon')) {
+        return "The atomic number of carbon is 6.";
+      }
+      if (q.includes('atomic number of oxygen')) {
+        return "The atomic number of oxygen is 8.";
+      }
+      if (q.includes('atomic number of gold')) {
+        return "The atomic number of gold is 79, with the chemical symbol Au.";
+      }
+      if (q.includes('father of computer') || q.includes('father of computers')) {
+        return "Charles Babbage is considered the father of the computer for conceptualizing the Analytical Engine.";
+      }
+      if (q.includes('father of artificial intelligence') || q.includes('father of ai')) {
+        return "John McCarthy is widely recognized as the father of Artificial Intelligence.";
+      }
+
       return null;
     }
 

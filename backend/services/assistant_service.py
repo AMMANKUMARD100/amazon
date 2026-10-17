@@ -406,6 +406,94 @@ def search_web_instant(query: str) -> Dict[str, Any]:
         direct = "Pathaan grossed approximately 1050 crores at the worldwide box office."
     elif "jawan" in ql and any(k in ql for k in ["box office", "collection", "gross"]):
         direct = "Jawan collected approximately 1150 crores at the worldwide box office."
+    # -------------------------------------------------------------
+    # Multi-Domain Precise Knowledge Resolver (Engineering, Coding, Biotech, Space, School Syllabus)
+    # -------------------------------------------------------------
+    # Coding & CS
+    elif "time complexity" in ql and ("binary search" in ql or "bin search" in ql):
+        direct = "The time complexity of binary search is O(log n) in the best, average, and worst cases for sorted arrays." if wants_detail else "The time complexity of binary search is O(log n)."
+    elif "time complexity" in ql and ("merge sort" in ql or "mergesort" in ql):
+        direct = "Merge sort has a time complexity of O(n log n) across all cases, using divide-and-conquer with O(n) auxiliary space." if wants_detail else "The time complexity of merge sort is O(n log n)."
+    elif "time complexity" in ql and ("quick sort" in ql or "quicksort" in ql):
+        direct = "Quick sort has an average time complexity of O(n log n), but degrades to O(n^2) in the worst case when the pivot is poorly chosen." if wants_detail else "The average time complexity of quick sort is O(n log n), and worst case is O(n^2)."
+    elif ("what is python" in ql or "define python" in ql) and "snake" not in ql:
+        direct = "Python is a high-level, interpreted, dynamically-typed programming language created by Guido van Rossum in 1991."
+    elif "polymorphism" in ql and ("what is" in ql or "define" in ql or "meaning" in ql):
+        direct = "Polymorphism is an object-oriented programming concept where a single interface or method can take multiple forms, typically through method overriding or overloading."
+    elif "encapsulation" in ql and ("what is" in ql or "define" in ql):
+        direct = "Encapsulation is the bundling of data and the methods that operate on that data into a single unit or class, restricting direct access to internal components."
+    elif "inheritance" in ql and ("what is" in ql or "define" in ql):
+        direct = "Inheritance is an OOP mechanism where a child class acquires properties and behaviors from a parent class, promoting code reusability."
+    elif "sql" in ql and any(k in ql for k in ["stand for", "full form", "meaning"]):
+        direct = "SQL stands for Structured Query Language, used for managing and querying relational databases."
+    elif "html" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "HTML stands for HyperText Markup Language, the standard markup language for creating web pages."
+    elif "ram" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "RAM stands for Random Access Memory, high-speed volatile primary memory used by CPUs."
+    elif "cpu" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "CPU stands for Central Processing Unit, the primary electronic component that executes instructions."
+    # Space & Astronomy
+    elif "chandrayaan 3" in ql or "chandrayaan-3" in ql:
+        direct = "India became the first nation to successfully land near the lunar south pole with Chandrayaan-3 on August 23, 2023."
+    elif "closest planet" in ql and "sun" in ql:
+        direct = "Mercury is the closest planet to the Sun."
+    elif "largest planet" in ql:
+        direct = "Jupiter is the largest planet in our solar system."
+    elif "hottest planet" in ql:
+        direct = "Venus is the hottest planet in our solar system, with surface temperatures around 465 degrees Celsius."
+    elif "red planet" in ql:
+        direct = "Mars is known as the Red Planet due to iron oxide (rust) on its surface."
+    elif "first man on the moon" in ql or "first person on the moon" in ql:
+        direct = "Neil Armstrong was the first person to walk on the Moon, during NASA's Apollo 11 mission on July 20, 1969."
+    elif "first human in space" in ql or "first person in space" in ql:
+        direct = "Yuri Gagarin was the first human in space, orbiting Earth aboard Vostok 1 on April 12, 1961."
+    elif "first indian in space" in ql:
+        direct = "Wing Commander Rakesh Sharma was the first Indian in space, flying aboard Soyuz T-11 on April 3, 1984."
+    # Biotech & Biology
+    elif "dna" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "DNA stands for Deoxyribonucleic Acid, the molecule carrying genetic instructions for life."
+    elif "rna" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "RNA stands for Ribonucleic Acid, which translates genetic code from DNA into proteins."
+    elif "crispr" in ql:
+        direct = "CRISPR-Cas9 is a revolutionary gene-editing technology derived from bacterial defenses, allowing scientists to precisely modify DNA sequences." if wants_detail else "CRISPR-Cas9 is a precision gene-editing technology used to modify DNA sequences in living organisms."
+    elif "powerhouse of the cell" in ql or "power house of the cell" in ql:
+        direct = "Mitochondria is the powerhouse of the cell because it generates cellular chemical energy in the form of ATP."
+    elif "father of genetics" in ql:
+        direct = "Gregor Mendel is recognized as the father of genetics for his discovery of the fundamental laws of inheritance."
+    elif "pcr" in ql and any(k in ql for k in ["stand for", "full form"]):
+        direct = "PCR stands for Polymerase Chain Reaction, a laboratory technique used to amplify specific DNA sequences rapidly."
+    elif "central dogma" in ql:
+        direct = "The central dogma of molecular biology describes the flow of genetic information: DNA to RNA via transcription, and RNA to protein via translation."
+    elif "how many chromosomes" in ql:
+        direct = "Humans have 46 chromosomes in 23 pairs."
+    # Engineering & Physics
+    elif "ohm" in ql and ("law" in ql or "ohm's law" in ql):
+        direct = "Ohm's Law states that current flowing through a conductor is directly proportional to voltage and inversely proportional to resistance: V = I * R." if wants_detail else "Ohm's Law states that Voltage equals Current multiplied by Resistance: V = I * R."
+    elif "newton" in ql and ("first law" in ql or "1st law" in ql):
+        direct = "Newton's First Law of Motion states that an object remains at rest or in uniform motion unless acted upon by an external net force."
+    elif "newton" in ql and ("second law" in ql or "2nd law" in ql):
+        direct = "Newton's Second Law of Motion states that force equals mass times acceleration: F = m * a."
+    elif "newton" in ql and ("third law" in ql or "3rd law" in ql):
+        direct = "Newton's Third Law of Motion states that for every action, there is an equal and opposite reaction."
+    elif "thermodynamics" in ql and ("first law" in ql or "1st law" in ql):
+        direct = "The First Law of Thermodynamics states that energy cannot be created or destroyed, only transformed from one form to another."
+    elif "bernoulli" in ql and "principle" in ql:
+        direct = "Bernoulli's principle states that an increase in fluid speed occurs simultaneously with a decrease in pressure or potential energy."
+    # Math & School Syllabus
+    elif "pythagoras" in ql or "pythagorean theorem" in ql:
+        direct = "The Pythagorean theorem states that in a right-angled triangle, the hypotenuse squared equals the sum of the squares of the other two sides: a^2 + b^2 = c^2."
+    elif "value of pi" in ql or "value of π" in ql:
+        direct = "The value of pi is approximately 3.14159, or 22/7 as a fraction."
+    elif "atomic number of carbon" in ql:
+        direct = "The atomic number of carbon is 6."
+    elif "atomic number of oxygen" in ql:
+        direct = "The atomic number of oxygen is 8."
+    elif "atomic number of gold" in ql:
+        direct = "The atomic number of gold is 79, with the chemical symbol Au."
+    elif "father of computer" in ql or "father of computers" in ql:
+        direct = "Charles Babbage is considered the father of the computer for conceptualizing the Analytical Engine."
+    elif "father of artificial intelligence" in ql or "father of ai" in ql:
+        direct = "John McCarthy is widely recognized as the father of Artificial Intelligence."
     else:
         direct = None
 
