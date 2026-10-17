@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2491,8 +2491,11 @@
       }
 
       // History & Leaders
-      if (q.includes('trump') && (q.includes('companies') || q.includes('business') || q.includes('owns') || q.includes('owned'))) {
-        return "Donald Trump's key business ventures operate under The Trump Organization, including Trump International Hotels, Trump Golf, Trump Media & Technology Group (Truth Social), and Trump Tower.";
+      if (q.includes('trump') && /compan|business|owns|owned|enterprises?|ventures?|list|brands?/.test(q)) {
+        return "Donald Trump owns The Trump Organization (hotels, resorts, golf clubs), Trump International Hotels, Trump Golf (19 clubs worldwide), Trump Media & Technology Group (Truth Social), and Trump Tower in New York.";
+      }
+      if (q.includes('trump') && /net worth|wealth|richest|billionaire/.test(q)) {
+        return "Donald Trump's estimated net worth is around 5-6 billion USD, primarily from real estate, hotels, golf clubs, and Trump Media.";
       }
       if ((q.includes('first') || q.includes('1st')) && q.includes('prime minister') && q.includes('india')) {
         return "Jawaharlal Nehru was the first Prime Minister of India, serving from 1947 until 1964.";
@@ -2633,14 +2636,23 @@
       }
 
       // Cricket Titles & Legends
-      if (q.includes('king of cricket') || (q.includes('king') && q.includes('cricket') && (q.includes('who') || q.includes('player')))) {
-        return "Virat Kohli is widely known and hailed across the world as the 'King of Cricket'.";
+      if (q.includes('king of cricket') || (q.includes('king') && q.includes('cricket'))) {
+        return "Virat Kohli is popularly known as the King of Cricket for his consistent run-scoring across all formats.";
       }
       if (q.includes('god of cricket')) {
         return "Sachin Tendulkar is revered as the 'God of Cricket' for his unmatched career and 100 international centuries.";
       }
-      if (q.includes('captain cool')) {
-        return "MS Dhoni is known as 'Captain Cool' for his calm and composed leadership in high-pressure matches.";
+      if (q.includes('captain cool') || (q.includes('dhoni') &amp;&amp; /known as|nickname|called/.test(q))) {
+        return "MS Dhoni is known as Captain Cool for his calm and composed leadership in high-pressure matches.";
+      }
+      if (q.includes('master blaster') || (q.includes('sachin') &amp;&amp; /known as|nickname|called/.test(q))) {
+        return "Sachin Tendulkar is known as the Master Blaster and the God of Cricket for his 100 international centuries.";
+      }
+      if ((q.includes('virat') || q.includes('kohli')) &amp;&amp; /known as|nickname|called/.test(q)) {
+        return "Virat Kohli is known as the King of Cricket for his dominance across all formats.";
+      }
+      if (q.includes('wall of cricket') || (q.includes('dravid') &amp;&amp; /known as|nickname|called|wall/.test(q))) {
+        return "Rahul Dravid is known as The Wall for his solid defensive batting and reliability in tough situations.";
       }
 
       // IPL Winners

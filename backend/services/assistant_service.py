@@ -297,8 +297,10 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     elif any(k in ql for k in ["who are you", "what is your name"]):
         direct = "I am your Alexa Personal Assistant. I can answer any question, open applications, search YouTube, schedule meetings, and help you with daily tasks."
     # History & Leaders
-    elif "trump" in ql and any(k in ql for k in ["companies", "business", "owns", "owned"]):
-        direct = "Donald Trump's key business ventures operate under The Trump Organization, including Trump International Hotels, Trump Golf, Trump Media & Technology Group (Truth Social), and Trump Tower."
+    elif "trump" in ql and any(k in ql for k in ["companies", "business", "owns", "owned", "list", "ventures", "enterprises", "brands"]):
+        direct = "Donald Trump owns The Trump Organization (hotels, resorts, golf clubs), Trump International Hotels, Trump Golf (19 clubs worldwide), Trump Media & Technology Group (Truth Social), and Trump Tower in New York."
+    elif "trump" in ql and any(k in ql for k in ["net worth", "wealth", "richest", "billionaire"]):
+        direct = "Donald Trump's estimated net worth is around 5-6 billion USD, primarily from real estate, hotels, golf clubs, and Trump Media."
     elif ("first" in ql or "1st" in ql) and "prime minister" in ql and "india" in ql:
         direct = "Jawaharlal Nehru was the first Prime Minister of India, serving from 1947 until 1964."
     elif "current prime minister" in ql and "india" in ql or ("prime minister of india" in ql and "first" not in ql):
@@ -384,12 +386,18 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     elif "2007" in ql and "t20" in ql and ("world cup" in ql or "cricket" in ql):
         direct = "India won the inaugural ICC T20 World Cup in 2007, defeating Pakistan by 5 runs in the final in Johannesburg."
     # Cricket Titles & Legends
-    elif "king of cricket" in ql or ("king" in ql and "cricket" in ql and any(k in ql for k in ["who", "player"])):
-        direct = "Virat Kohli is widely known and hailed across the world as the 'King of Cricket'."
-    elif "god of cricket" in ql:
-        direct = "Sachin Tendulkar is revered as the 'God of Cricket' for his unmatched career and 100 international centuries."
-    elif "captain cool" in ql:
-        direct = "MS Dhoni is known as 'Captain Cool' for his calm and composed leadership in high-pressure matches."
+    elif "king of cricket" in ql or ("king" in ql and "cricket" in ql):
+        direct = "Virat Kohli is popularly known as the King of Cricket for his consistent run-scoring across all formats."
+    elif "god of cricket" in ql or ("sachin" in ql and any(k in ql for k in ["known as", "nickname", "called"])):
+        direct = "Sachin Tendulkar is revered as the God of Cricket for his unmatched career and 100 international centuries."
+    elif "master blaster" in ql:
+        direct = "Sachin Tendulkar is known as the Master Blaster and the God of Cricket for his 100 international centuries."
+    elif "captain cool" in ql or ("dhoni" in ql and any(k in ql for k in ["known as", "nickname", "called"])):
+        direct = "MS Dhoni is known as Captain Cool for his calm and composed leadership in high-pressure matches."
+    elif "wall of cricket" in ql or ("dravid" in ql and any(k in ql for k in ["known as", "nickname", "called", "wall"])):
+        direct = "Rahul Dravid is known as The Wall for his solid defensive batting and reliability in tough situations."
+    elif ("kohli" in ql or "virat" in ql) and any(k in ql for k in ["known as", "nickname", "called"]):
+        direct = "Virat Kohli is known as the King of Cricket for his dominance across all formats."
     # IPL Winners
     elif "ipl" in ql and "2024" in ql and any(k in ql for k in ["who won", "winner", "champion"]):
         direct = "Kolkata Knight Riders won IPL 2024, defeating Sunrisers Hyderabad by 8 wickets in the final."
