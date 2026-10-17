@@ -161,7 +161,13 @@ def open_app_or_site(target: str, query: Optional[str] = None) -> Dict[str, Any]
     url = None
     app_label = target.title()
 
-    if clean_target in APP_URLS:
+    if clean_target == "youtube" and query:
+        url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}"
+        app_label = f"YouTube search for '{query}'"
+    elif clean_target == "google" and query:
+        url = f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
+        app_label = f"Google search for '{query}'"
+    elif clean_target in APP_URLS:
         url = APP_URLS[clean_target]
     elif "youtube" in clean_target:
         if query:
