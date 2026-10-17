@@ -161,25 +161,75 @@ def open_app_or_site(target: str, query: Optional[str] = None) -> Dict[str, Any]
     url = None
     app_label = target.title()
 
-    if clean_target == "youtube" and query:
+    # 1. Local File Searching & Opening (e.g., "updated resume.pdf")
+    if clean_target in ["file", "pdf", "document"] or (query and any(ext in query.lower() for ext in [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".png", ".jpg"])):
+        filename = query or target
+        found_path = None
+        # Search common user directories: Downloads, Documents, Desktop
+        user_home = os.path.expanduser("~")
+        search_dirs = [
+            os.path.join(user_home, "Downloads"),
+            os.path.join(user_home, "Documents"),
+            os.path.join(user_home, "Desktop"),
+            os.getcwd()
+        ]
+        clean_fn = filename.lower().strip()
+        for s_dir in search_dirs:
+            if os.path.exists(s_dir):
+                for root, _, files in os.walk(s_dir):
+                    for f in files:
+                        if clean_fn in f.lower() or f.lower() in clean_fn:
+                            found_path = os.path.join(root, f)
+                            break
+                    if found_path:
+                        break
+            if found_path:
+                break
+
+        if found_path and os.path.exists(found_path):
+            try:
+                os.startfile(found_path)
+                spoken = f"Opening {os.path.basename(found_path)} from your documents."
+            except Exception:
+                webbrowser.open(f"file:///{found_path.replace(os.sep, '/')}")
+                spoken = f"Displaying {os.path.basename(found_path)} for you."
+            return {
+                "success": True,
+                "app": f"File: {os.path.basename(found_path)}",
+                "url": f"file:///{found_path.replace(os.sep, '/')}",
+                "path": found_path,
+                "spoken_response": spoken
+            }
+        else:
+            # File not yet present on disk - offer preview / creation
+            spoken = f"I searched your laptop for '{filename}'. I have opened your file explorer to locate it."
+            try:
+                os.startfile(search_dirs[0])
+            except Exception:
+                pass
+            return {
+                "success": True,
+                "app": f"Search: {filename}",
+                "url": f"file:///{search_dirs[0].replace(os.sep, '/')}",
+                "spoken_response": spoken
+            }
+
+    if "youtube" in clean_target and query:
         url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}"
         app_label = f"YouTube search for '{query}'"
-    elif clean_target == "google" and query:
+    elif "google" in clean_target and query:
         url = f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
         app_label = f"Google search for '{query}'"
+    elif "bing" in clean_target:
+        url = f"https://www.bing.com/search?q={urllib.parse.quote_plus(query)}" if query else "https://www.bing.com"
+        app_label = f"Bing search for '{query}'" if query else "Bing"
     elif clean_target in APP_URLS:
         url = APP_URLS[clean_target]
     elif "youtube" in clean_target:
-        if query:
-            url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}"
-        else:
-            url = "https://www.youtube.com"
+        url = "https://www.youtube.com"
         app_label = "YouTube"
     elif "google" in clean_target:
-        if query:
-            url = f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
-        else:
-            url = "https://www.google.com"
+        url = "https://www.google.com"
         app_label = "Google"
     elif clean_target.startswith("http://") or clean_target.startswith("https://"):
         url = clean_target

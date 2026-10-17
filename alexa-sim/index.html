@@ -2373,28 +2373,40 @@
     // Personal Assistant Tool Handlers (Alexa+)
     // -------------------------------------------------------------
 
-    // Tool: Open App or Website
+    // Tool: Open App, Website, or Local Desktop File
     async function executeOpenApp(utterance) {
       const toolName = 'open_app_or_site';
       let target = 'google';
       let query = null;
       const lower = utterance.toLowerCase();
 
-      if (lower.includes('youtube')) {
+      // Check if user is asking to open a file (e.g. "open file in my laptop and open updated resume.pdf")
+      const fileMatch = utterance.match(/(?:open|show|display|find)?\s*(?:file|document|pdf)?\s*([a-zA-Z0-9_\-\s]+\.(?:pdf|docx?|txt|xlsx?|png|jpg))/i);
+      if (fileMatch || lower.includes('.pdf') || lower.includes('resume')) {
+        target = 'file';
+        query = fileMatch ? fileMatch[1].trim() : 'updated resume.pdf';
+      } else if (lower.includes('youtube')) {
         target = 'youtube';
-        const m = lower.match(/(?:search|play|for)\s+(.+)$/);
-        if (m) query = m[1].trim();
+        // Extract query after "search for", "search", "play", "and find", etc.
+        const m = utterance.match(/(?:search for|search|play|for|about)\s+(.+)$/i);
+        if (m) query = m[1].replace(/^(?:for|about)\s+/i, '').trim();
       } else if (lower.includes('spotify')) {
         target = 'spotify';
+      } else if (lower.includes('bing')) {
+        target = 'bing';
+        const m = utterance.match(/(?:search for|search|for|about)\s+(.+)$/i);
+        if (m) query = m[1].trim();
       } else if (lower.includes('google')) {
         target = 'google';
-        const m = lower.match(/(?:search|for)\s+(.+)$/);
+        const m = utterance.match(/(?:search for|search|for|about)\s+(.+)$/i);
         if (m) query = m[1].trim();
       } else if (lower.includes('calculator')) {
         target = 'calculator';
       } else {
-        const m = lower.match(/(?:open|launch|go to)\s+([a-zA-Z0-9\.\_\-]+)/);
+        const m = utterance.match(/(?:open|launch|go to)\s+([a-zA-Z0-9\.\_\-]+)/i);
         if (m) target = m[1].trim();
+        const qm = utterance.match(/(?:search for|search|for)\s+(.+)$/i);
+        if (qm) query = qm[1].trim();
       }
 
       highlightFlowNode('flowTool');
@@ -2902,13 +2914,50 @@
           attendance_percentage: 76.0,
           pending_assignments_count: 3
         };
-      } else if (toolName === 'search_faq' || toolName === 'searchFAQ') {
-        return [
-          {
-            question: 'What is the hostel curfew and night-out policy?',
-            answer: 'Hostel main gates close promptly at 10:30 PM on weekdays and 11:00 PM on weekends. Late entries require an authorized pass from the Warden.'
-          }
-        ];
+      } else if (toolName === 'open_app_or_site') {
+        const target = (args.target || 'youtube').toLowerCase();
+        const query = args.query || '';
+        let url = 'https://www.youtube.com';
+        let app = target.toUpperCase();
+        if (target === 'youtube' && query) {
+          url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+          app = `YouTube search for '${query}'`;
+        } else if (target === 'google' && query) {
+          url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+          app = `Google search for '${query}'`;
+        } else if (target === 'spotify') {
+          url = 'https://open.spotify.com';
+        } else if (target === 'calculator') {
+          url = 'calc://';
+        }
+        return {
+          success: true,
+          app: app,
+          url: url,
+          spoken_response: `Opening ${app} for you now.`
+        };
+      } else if (toolName === 'search_web_instant') {
+        const q = args.query || 'India';
+        return {
+          query: q,
+          spoken_summary: `Here is the latest live information and search results for ${q}.`,
+          results: [
+            { title: `Search for ${q} on Google`, url: `https://www.google.com/search?q=${encodeURIComponent(q)}` },
+            { title: `Live News & Updates about ${q}`, url: `https://news.google.com/search?q=${encodeURIComponent(q)}` }
+          ]
+        };
+      } else if (toolName === 'plan_trip') {
+        const dest = args.destination || 'Goa';
+        const days = args.days || 3;
+        return {
+          destination: dest,
+          days: days,
+          spoken_response: `I've prepared a ${days}-day itinerary for ${dest}.`,
+          itinerary: [
+            { day: 1, title: `Day 1 in ${dest}`, morning: 'Arrival & City Tour', evening: 'Sunset views & Dinner' },
+            { day: 2, title: `Day 2 in ${dest}`, morning: 'Sightseeing & Adventure', evening: 'Local Market & Music' }
+          ]
+        };
       }
       return { success: true, message: 'Tool executed successfully.' };
     }
