@@ -2382,6 +2382,62 @@
       return cleaned;
     }
 
+    // -------------------------------------------------------------------
+    // Smart Question Intent Analyzer & Targeted Answer Extractor
+    // -------------------------------------------------------------------
+    // Detects WHAT the user is asking (box office? winner? score? cast?)
+    // and extracts ONLY the relevant sentence(s) from a Wikipedia extract.
+    function detectQuestionIntent(query) {
+      const q = query.toLowerCase();
+      if (/box\s*office|collection|gross|earned|revenue|budget/.test(q))
+        return { type: 'box_office', keywords: ['box office', 'gross', 'crore', 'million', 'billion', 'earned', 'collection', 'revenue', 'budget', '₹', '$'] };
+      if (/how many runs|score|scored|total runs|batting|innings/.test(q))
+        return { type: 'score', keywords: ['scored', 'runs', 'all out', 'innings', 'batting', 'score', '/', 'overs', 'for'] };
+      if (/who won|winner|champion|defeated|victory/.test(q))
+        return { type: 'winner', keywords: ['won', 'defeated', 'champion', 'victory', 'winner', 'winning', 'clinched', 'retained'] };
+      if (/cast|actors?|starring|star cast|who acted/.test(q))
+        return { type: 'cast', keywords: ['stars', 'starring', 'features', 'cast', 'acted', 'played by', 'role'] };
+      if (/director|directed|who directed|filmmaker/.test(q))
+        return { type: 'director', keywords: ['directed', 'director', 'filmmaker', 'helmed'] };
+      if (/release|when.*(?:come|came) out|release date/.test(q))
+        return { type: 'release', keywords: ['released', 'release', 'premiered', 'opened'] };
+      if (/capital/.test(q))
+        return { type: 'capital', keywords: ['capital'] };
+      return { type: 'general', keywords: [] };
+    }
+
+    function smartExtractAnswer(question, fullExtract, allSentences) {
+      if (!fullExtract || !allSentences || allSentences.length === 0) return null;
+
+      const intent = detectQuestionIntent(question);
+      if (intent.type === 'general') {
+        // Default: first 2 sentences
+        return allSentences.slice(0, 2).join(' ');
+      }
+
+      // Scan ALL sentences for ones matching the intent keywords
+      const matchingSentences = [];
+      for (const sent of allSentences) {
+        const sl = sent.toLowerCase();
+        for (const kw of intent.keywords) {
+          if (sl.includes(kw)) {
+            matchingSentences.push(sent);
+            break;
+          }
+        }
+      }
+
+      if (matchingSentences.length > 0) {
+        // Return up to 2 matching sentences
+        return matchingSentences.slice(0, 2).join(' ');
+      }
+
+      // If no matching sentences found for the specific intent, 
+      // DON'T return generic movie/article summary — instead return null
+      // so the caller can provide a Google Search fallback
+      return null;
+    }
+
     // Intelligent General Knowledge Engine (Instant offline, no campus restrictions)
     function answerGeneralKnowledge(query) {
       const q = query.toLowerCase().trim();
@@ -2505,6 +2561,77 @@
       }
       if (q.includes('speed of light')) {
         return "The speed of light in vacuum is approximately 299,792,458 meters per second, or about 300,000 kilometers per second.";
+      }
+
+      // Cricket World Cup Facts (intent-aware: winner vs score vs venue)
+      if (q.includes('2011') && (q.includes('world cup') || q.includes('cricket'))) {
+        if (/score|runs|scored|how many/.test(q) && (q.includes('sri lanka') || q.includes('srilanka'))) {
+          return "Sri Lanka scored 274 runs for 6 wickets in the 2011 Cricket World Cup Final against India.";
+        }
+        if (/score|runs|scored|how many/.test(q) && q.includes('india')) {
+          return "India scored 277 runs for 4 wickets in the 2011 Cricket World Cup Final, chasing down Sri Lanka's target of 275.";
+        }
+        if (/who won|winner|champion/.test(q)) {
+          return "India won the 2011 Cricket World Cup, defeating Sri Lanka by 6 wickets in the final at Wankhede Stadium, Mumbai.";
+        }
+        if (/man of the match|player of the match/.test(q)) {
+          return "MS Dhoni was the Man of the Match in the 2011 Cricket World Cup Final for his unbeaten 91 runs off 79 balls.";
+        }
+        return "India won the 2011 Cricket World Cup, defeating Sri Lanka by 6 wickets in the final at Mumbai.";
+      }
+      if (q.includes('2023') && (q.includes('world cup') || q.includes('cricket'))) {
+        if (/who won|winner|champion/.test(q)) {
+          return "Australia won the 2023 Cricket World Cup, defeating India by 6 wickets in the final at Narendra Modi Stadium, Ahmedabad.";
+        }
+        return "Australia won the 2023 Cricket World Cup, defeating India by 6 wickets in the final at Ahmedabad.";
+      }
+      if (q.includes('2019') && (q.includes('world cup') || q.includes('cricket')) && (/who won|winner|champion/.test(q))) {
+        return "England won the 2019 Cricket World Cup, defeating New Zealand in a dramatic final at Lord's decided by a boundary count after a Super Over.";
+      }
+      if (q.includes('2007') && q.includes('t20') && (q.includes('world cup') || q.includes('cricket'))) {
+        return "India won the inaugural ICC T20 World Cup in 2007, defeating Pakistan by 5 runs in the final in Johannesburg.";
+      }
+
+      // IPL Winners
+      if (q.includes('ipl') && q.includes('2024') && (/who won|winner|champion/.test(q))) {
+        return "Kolkata Knight Riders won IPL 2024, defeating Sunrisers Hyderabad by 8 wickets in the final.";
+      }
+      if (q.includes('ipl') && q.includes('2023') && (/who won|winner|champion/.test(q))) {
+        return "Chennai Super Kings won IPL 2023, defeating Gujarat Titans by 5 wickets in the final.";
+      }
+
+      // Movie Box Office (intent-aware)
+      if (q.includes('dhurandhar')) {
+        if (/box\s*office|collection|gross|earned|revenue/.test(q)) {
+          return "Dhurandhar collected approximately 550 crores at the worldwide box office, making it one of the biggest Hindi film blockbusters.";
+        }
+        if (/director|directed/.test(q)) {
+          return "Dhurandhar was directed by Aditya Dhar.";
+        }
+        if (/cast|actors?|starring/.test(q)) {
+          return "Dhurandhar stars Ranveer Singh, Akshaye Khanna, Sanjay Dutt, Arjun Rampal, and R. Madhavan.";
+        }
+        // Only return general info if no specific intent detected
+      }
+      if (q.includes('pushpa 2') || q.includes('pushpa the rule')) {
+        if (/box\s*office|collection|gross|earned|revenue/.test(q)) {
+          return "Pushpa 2: The Rule collected over 1800 crores at the worldwide box office, making it one of the highest-grossing Indian films of all time.";
+        }
+        if (/who won|winner|champion/.test(q)) return null;
+      }
+      if (q.includes('bahubali 2') || q.includes('baahubali 2')) {
+        if (/box\s*office|collection|gross|earned|revenue/.test(q)) {
+          return "Baahubali 2: The Conclusion grossed approximately 1810 crores worldwide at the box office.";
+        }
+      }
+      if (q.includes('rrr') && (/box\s*office|collection|gross/.test(q))) {
+        return "RRR collected approximately 1200 crores at the worldwide box office.";
+      }
+      if (q.includes('pathaan') && (/box\s*office|collection|gross/.test(q))) {
+        return "Pathaan grossed approximately 1050 crores at the worldwide box office.";
+      }
+      if (q.includes('jawan') && (/box\s*office|collection|gross/.test(q))) {
+        return "Jawan collected approximately 1150 crores at the worldwide box office.";
       }
 
       return null;
@@ -2675,7 +2802,16 @@
               const pJson = await pResp.json();
               if (pJson.extract) {
                 const sentences = pJson.extract.split(/(?<=[.!?])\s+/);
-                speech = sentences.slice(0, 2).join(' ');
+                // Use smart intent-aware extraction instead of blindly taking first 2 sentences
+                const smartAnswer = smartExtractAnswer(utterance, pJson.extract, sentences);
+                if (smartAnswer) {
+                  speech = smartAnswer;
+                } else {
+                  // No relevant sentences found for user's specific question intent
+                  // Provide a concise fallback with Google search link instead of dumping wrong info
+                  const intent = detectQuestionIntent(utterance);
+                  speech = `I couldn't find the exact ${intent.type.replace('_', ' ')} information for that. Please check the search results below for the latest details.`;
+                }
               } else if (hit.snippet) {
                 speech = hit.snippet.replace(/<[^>]*>/g, '').trim();
               }

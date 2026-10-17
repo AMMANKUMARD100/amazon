@@ -363,6 +363,49 @@ def search_web_instant(query: str) -> Dict[str, Any]:
         direct = "Sir Isaac Newton discovered the universal law of gravitation in 1687."
     elif "speed of light" in ql:
         direct = "The speed of light in vacuum is approximately 299,792,458 meters per second, or about 300,000 kilometers per second."
+    # Cricket World Cup Facts (intent-aware: winner vs score vs venue)
+    elif "2011" in ql and ("world cup" in ql or "cricket" in ql):
+        if any(k in ql for k in ["score", "runs", "scored", "how many"]) and ("sri lanka" in ql or "srilanka" in ql):
+            direct = "Sri Lanka scored 274 runs for 6 wickets in the 2011 Cricket World Cup Final against India."
+        elif any(k in ql for k in ["score", "runs", "scored", "how many"]) and "india" in ql:
+            direct = "India scored 277 runs for 4 wickets in the 2011 Cricket World Cup Final, chasing down Sri Lanka's target of 275."
+        elif any(k in ql for k in ["who won", "winner", "champion"]):
+            direct = "India won the 2011 Cricket World Cup, defeating Sri Lanka by 6 wickets in the final at Wankhede Stadium, Mumbai."
+        elif any(k in ql for k in ["man of the match", "player of the match"]):
+            direct = "MS Dhoni was the Man of the Match in the 2011 Cricket World Cup Final for his unbeaten 91 runs off 79 balls."
+        else:
+            direct = "India won the 2011 Cricket World Cup, defeating Sri Lanka by 6 wickets in the final at Mumbai."
+    elif "2023" in ql and ("world cup" in ql or "cricket" in ql):
+        direct = "Australia won the 2023 Cricket World Cup, defeating India by 6 wickets in the final at Narendra Modi Stadium, Ahmedabad."
+    elif "2019" in ql and ("world cup" in ql or "cricket" in ql):
+        direct = "England won the 2019 Cricket World Cup, defeating New Zealand in a dramatic final at Lord's decided by a boundary count after a Super Over."
+    elif "2007" in ql and "t20" in ql and ("world cup" in ql or "cricket" in ql):
+        direct = "India won the inaugural ICC T20 World Cup in 2007, defeating Pakistan by 5 runs in the final in Johannesburg."
+    # IPL Winners
+    elif "ipl" in ql and "2024" in ql and any(k in ql for k in ["who won", "winner", "champion"]):
+        direct = "Kolkata Knight Riders won IPL 2024, defeating Sunrisers Hyderabad by 8 wickets in the final."
+    elif "ipl" in ql and "2023" in ql and any(k in ql for k in ["who won", "winner", "champion"]):
+        direct = "Chennai Super Kings won IPL 2023, defeating Gujarat Titans by 5 wickets in the final."
+    # Movie Box Office (intent-aware)
+    elif "dhurandhar" in ql:
+        if any(k in ql for k in ["box office", "collection", "gross", "earned", "revenue"]):
+            direct = "Dhurandhar collected approximately 550 crores at the worldwide box office, making it one of the biggest Hindi film blockbusters."
+        elif any(k in ql for k in ["director", "directed"]):
+            direct = "Dhurandhar was directed by Aditya Dhar."
+        elif any(k in ql for k in ["cast", "actor", "starring"]):
+            direct = "Dhurandhar stars Ranveer Singh, Akshaye Khanna, Sanjay Dutt, Arjun Rampal, and R. Madhavan."
+        else:
+            direct = None
+    elif ("pushpa 2" in ql or "pushpa the rule" in ql) and any(k in ql for k in ["box office", "collection", "gross"]):
+        direct = "Pushpa 2: The Rule collected over 1800 crores at the worldwide box office, making it one of the highest-grossing Indian films of all time."
+    elif ("bahubali 2" in ql or "baahubali 2" in ql) and any(k in ql for k in ["box office", "collection", "gross"]):
+        direct = "Baahubali 2: The Conclusion grossed approximately 1810 crores worldwide at the box office."
+    elif "rrr" in ql and any(k in ql for k in ["box office", "collection", "gross"]):
+        direct = "RRR collected approximately 1200 crores at the worldwide box office."
+    elif "pathaan" in ql and any(k in ql for k in ["box office", "collection", "gross"]):
+        direct = "Pathaan grossed approximately 1050 crores at the worldwide box office."
+    elif "jawan" in ql and any(k in ql for k in ["box office", "collection", "gross"]):
+        direct = "Jawan collected approximately 1150 crores at the worldwide box office."
     else:
         direct = None
 
@@ -433,7 +476,31 @@ def search_web_instant(query: str) -> Dict[str, Any]:
                         w_data = json.loads(w_resp.read().decode("utf-8"))
                         if w_data.get("extract"):
                             sentences = re.split(r'(?<=[.!?])\s+', w_data["extract"])
-                            summary = " ".join(sentences[:2])
+                            # Smart intent-aware sentence extraction
+                            intent_type = "general"
+                            intent_kws = []
+                            if any(k in ql for k in ["box office", "collection", "gross", "earned", "revenue", "budget"]):
+                                intent_type = "box_office"
+                                intent_kws = ["box office", "gross", "crore", "million", "billion", "earned", "collection", "revenue", "budget", "₹", "$"]
+                            elif any(k in ql for k in ["score", "runs", "scored", "how many runs", "total runs"]):
+                                intent_type = "score"
+                                intent_kws = ["scored", "runs", "all out", "innings", "batting", "score", "/", "overs", "for"]
+                            elif any(k in ql for k in ["who won", "winner", "champion", "defeated", "victory"]):
+                                intent_type = "winner"
+                                intent_kws = ["won", "defeated", "champion", "victory", "winner", "winning", "clinched", "retained"]
+                            elif any(k in ql for k in ["cast", "actor", "starring", "star cast"]):
+                                intent_type = "cast"
+                                intent_kws = ["stars", "starring", "features", "cast", "acted", "played by", "role"]
+
+                            if intent_type != "general":
+                                matched = [s for s in sentences if any(kw in s.lower() for kw in intent_kws)]
+                                if matched:
+                                    summary = " ".join(matched[:2])
+                                else:
+                                    summary = f"I couldn't find the exact {intent_type.replace('_', ' ')} information in the summary. Here are the search results with full details."
+                            else:
+                                summary = " ".join(sentences[:2])
+
                             related_topics.insert(0, {
                                 "title": f"Wikipedia: {best_title}",
                                 "url": w_data.get("content_urls", {}).get("desktop", {}).get("page", f"https://en.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}")
