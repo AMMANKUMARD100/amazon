@@ -433,6 +433,10 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     elif "cpu" in ql and any(k in ql for k in ["stand for", "full form"]):
         direct = "CPU stands for Central Processing Unit, the primary electronic component that executes instructions."
     # Space & Astronomy
+    elif "south pole" in ql and ("moon" in ql or "lunar" in ql):
+        direct = "India was the first country to land on the south pole of the Moon with the Chandrayaan-3 mission on August 23, 2023."
+    elif ("first country" in ql or "which country" in ql) and ("land on moon" in ql or "landed on the moon" in ql or "landed on moon" in ql):
+        direct = "The Soviet Union was the first country to land an uncrewed spacecraft on the Moon in 1959, while the United States was the first country to land humans on the Moon in 1969."
     elif "chandrayaan 3" in ql or "chandrayaan-3" in ql:
         direct = "India became the first nation to successfully land near the lunar south pole with Chandrayaan-3 on August 23, 2023."
     elif "closest planet" in ql and "sun" in ql:
@@ -443,7 +447,7 @@ def search_web_instant(query: str) -> Dict[str, Any]:
         direct = "Venus is the hottest planet in our solar system, with surface temperatures around 465 degrees Celsius."
     elif "red planet" in ql:
         direct = "Mars is known as the Red Planet due to iron oxide (rust) on its surface."
-    elif "first man on the moon" in ql or "first person on the moon" in ql:
+    elif ("first man" in ql or "first person" in ql or "who was the first man" in ql or "who was the first person" in ql) and "moon" in ql:
         direct = "Neil Armstrong was the first person to walk on the Moon, during NASA's Apollo 11 mission on July 20, 1969."
     elif "first human in space" in ql or "first person in space" in ql:
         direct = "Yuri Gagarin was the first human in space, orbiting Earth aboard Vostok 1 on April 12, 1961."
@@ -584,6 +588,31 @@ def search_web_instant(query: str) -> Dict[str, Any]:
                                 matched = [s for s in sentences if any(kw in s.lower() for kw in intent_kws)]
                                 if matched:
                                     summary = " ".join(matched[:2])
+                                elif intent_type == "box_office":
+                                    # Dynamically parse wikitext infobox for box office / gross
+                                    try:
+                                        parse_api = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.parse.quote(best_title)}&prop=wikitext&format=json"
+                                        p_req = urllib.request.Request(parse_api, headers={"User-Agent": "AlexaPersonalAssistant/2.0"})
+                                        with urllib.request.urlopen(p_req, timeout=3.0) as p_resp:
+                                            p_data = json.loads(p_resp.read().decode("utf-8"))
+                                            wikitext = p_data.get("parse", {}).get("wikitext", {}).get("*", "")
+                                            bo_m = re.search(r'\|\s*(?:box[-_ ]*office|gross)\s*=\s*(.+?)(?=\n\s*\||\n\s*\}\})', wikitext, re.IGNORECASE | re.DOTALL)
+                                            if bo_m:
+                                                bo_raw = bo_m.group(1)
+                                                bo_raw = re.sub(r'<!--.*?-->', '', bo_raw, flags=re.DOTALL)
+                                                bo_raw = re.sub(r'<ref.*?(?:/>|</ref>)', '', bo_raw, flags=re.DOTALL | re.IGNORECASE)
+                                                bo_raw = re.sub(r'\{\{INR\|([^}]+)\}\}', r'Rs. \1', bo_raw, flags=re.IGNORECASE)
+                                                bo_raw = re.sub(r'\{\{INR(?:Convert)?\|([0-9\.]+)\|([a-z]+)[^}]*\}\}', r'Rs. \1 \2', bo_raw, flags=re.IGNORECASE)
+                                                bo_raw = re.sub(r'\{\{[^}]+\}\}', '', bo_raw)
+                                                bo_raw = re.sub(r'\[\[(?:[^\|\]]+\|)?([^\]]+)\]\]', r'\1', bo_raw)
+                                                bo_raw = re.sub(r'[\r\n\t]+', ' ', bo_raw).strip()
+                                                bo_raw = re.sub(r'\s+', ' ', bo_raw).split('|')[0].strip()
+                                                if bo_raw and len(bo_raw) > 1 and "==" not in bo_raw:
+                                                    summary = f"The box office collection of {best_title} is approximately {bo_raw}."
+                                    except Exception:
+                                        pass
+                                    if not summary:
+                                        summary = f"The estimated box office collection for {best_title} is available in the search results below."
                                 else:
                                     summary = f"I couldn't find the exact {intent_type.replace('_', ' ')} information in the summary. Here are the search results with full details."
                             else:

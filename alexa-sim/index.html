@@ -2406,6 +2406,46 @@
       return { type: 'general', keywords: [] };
     }
 
+    // Dynamic live box office extractor from Wikipedia Infobox wikitext
+    async function fetchWikiBoxOffice(movieQuery) {
+      try {
+        const cleanTitle = movieQuery.replace(/^(?:what was the|what is the|give me|tell me)?\s*(?:box\s*office|collection|gross|earned|revenue)?\s*(?:of|for)?\s*(?:movie|film)?\s*/i, '').trim();
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanTitle + ' film')}&format=json&origin=*`;
+        const sResp = await fetch(searchUrl);
+        const sData = await sResp.json();
+        const hits = sData.query && sData.query.search;
+        if (!hits || hits.length === 0) return null;
+        const pageTitle = hits[0].title;
+
+        // Parse wikitext from page
+        const parseUrl = `https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=wikitext&format=json&origin=*`;
+        const pResp = await fetch(parseUrl);
+        const pData = await pResp.json();
+        const wikitext = pData.parse && pData.parse.wikitext && pData.parse.wikitext['*'];
+        if (!wikitext) return null;
+
+        const m = wikitext.match(/\|\s*(?:box[-_ ]*office|gross)\s*=\s*(.+?)(?=\n\s*\||\n\s*\}\})/is);
+        if (m) {
+          let val = m[1];
+          val = val.replace(/<!--.*?-->/gs, '');
+          val = val.replace(/<ref.*?(?:\/>|<\/ref>)/gis, '');
+          val = val.replace(/\{\{INR\|([^}]+)\}\}/gi, '₹$1');
+          val = val.replace(/\{\{INR(?:Convert)?\|([0-9\.]+)\|([a-z]+)[^}]*\}\}/gi, '₹$1 $2');
+          val = val.replace(/\{\{[^}]+\}\}/g, '');
+          val = val.replace(/\[\[(?:[^\|\]]+\|)?([^\]]+)\]\]/g, '$1');
+          val = val.replace(/[\r\n\t]+/g, ' ').trim();
+          val = val.replace(/\s+/g, ' ');
+          // Clean up any trailing template or citation noise
+          val = val.split(/[\|\n]/)[0].trim();
+          if (val && val.length > 1 && !val.includes('==')) {
+            const shortTitle = pageTitle.replace(/\s*\([^)]*\)/, '');
+            return `The box office collection of ${shortTitle} is approximately ${val}.`;
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
     function smartExtractAnswer(question, fullExtract, allSentences) {
       if (!fullExtract || !allSentences || allSentences.length === 0) return null;
 
@@ -2432,9 +2472,6 @@
         return matchingSentences.slice(0, 2).join(' ');
       }
 
-      // If no matching sentences found for the specific intent, 
-      // DON'T return generic movie/article summary — instead return null
-      // so the caller can provide a Google Search fallback
       return null;
     }
 
@@ -2674,6 +2711,13 @@
       }
 
       // 2. Space & Astronomy
+      // South Pole of Moon (Country vs Person)
+      if (q.includes('south pole') && (q.includes('moon') || q.includes('lunar'))) {
+        return "India was the first country to land on the south pole of the Moon with the Chandrayaan-3 mission on August 23, 2023.";
+      }
+      if ((q.includes('first country') || q.includes('which country')) && (q.includes('land on moon') || q.includes('landed on the moon') || q.includes('landed on moon'))) {
+        return "The Soviet Union (USSR) was the first country to land an uncrewed spacecraft (Luna 2) on the Moon in 1959, while the United States was the first country to land humans on the Moon in 1969.";
+      }
       if (q.includes('chandrayaan 3') || q.includes('chandrayaan-3')) {
         if (q.includes('who') || q.includes('country') || q.includes('land')) {
           return "India became the first nation to successfully land near the lunar south pole with Chandrayaan-3 on August 23, 2023.";
@@ -2692,7 +2736,7 @@
       if (q.includes('red planet')) {
         return "Mars is known as the Red Planet due to iron oxide (rust) on its surface.";
       }
-      if (q.includes('first man on the moon') || q.includes('first person on the moon')) {
+      if ((q.includes('first man') || q.includes('first person') || q.includes('who was the first man') || q.includes('who was the first person')) && q.includes('moon')) {
         return "Neil Armstrong was the first person to walk on the Moon, during NASA's Apollo 11 mission on July 20, 1969.";
       }
       if (q.includes('first human in space') || q.includes('first person in space')) {
@@ -2926,7 +2970,15 @@
         const directFact = answerGeneralKnowledge(utterance) || answerGeneralKnowledge(cleanQ);
         if (directFact) {
           speech = directFact;
-        } else {
+        } else if (/box\s*office|collection|gross|earned|revenue/.test(utterance)) {
+          // Dynamic live Wikipedia infobox extractor for movie collections
+          const bo = await fetchWikiBoxOffice(cleanQ || utterance);
+          if (bo) {
+            speech = bo;
+          }
+        }
+        
+        if (!speech || speech.includes('Based on latest references') || speech.includes("I didn't quite catch that")) {
           try {
             const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}&format=json&origin=*`;
             const sResp = await fetch(sUrl);
@@ -2943,11 +2995,11 @@
                 const smartAnswer = smartExtractAnswer(utterance, pJson.extract, sentences);
                 if (smartAnswer) {
                   speech = smartAnswer;
+                } else if (/box\s*office|collection|gross/.test(utterance)) {
+                  // Fallback: estimate from snippet or page
+                  speech = `The estimated box office collection details for ${title} are available in the search results below.`;
                 } else {
-                  // No relevant sentences found for user's specific question intent
-                  // Provide a concise fallback with Google search link instead of dumping wrong info
-                  const intent = detectQuestionIntent(utterance);
-                  speech = `I couldn't find the exact ${intent.type.replace('_', ' ')} information for that. Please check the search results below for the latest details.`;
+                  speech = sentences.slice(0, 2).join(' ');
                 }
               } else if (hit.snippet) {
                 speech = hit.snippet.replace(/<[^>]*>/g, '').trim();
