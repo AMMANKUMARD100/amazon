@@ -1297,9 +1297,9 @@
         <div class="transcript-messages" id="chatMessages">
           <!-- Initial Welcome Message -->
           <div class="msg-group assistant">
-            <span class="msg-author">Alexa+ · CampusMate AI</span>
+            <span class="msg-author">Alexa Voice Assistant</span>
             <div class="msg-bubble assistant">
-              Good day, Alex! I am your <strong>CampusMate Alexa+ Concierge</strong>. You can ask me to brief your day, list pending assignments, check attendance risk, manage study plans, or say <em>"Plan my evening"</em> for a multi-step schedule.
+              Hello! I am your <strong>Alexa Personal Assistant</strong>. I can answer any question, open applications or YouTube directly, search the web, manage meetings, and help you with any task. Try saying <em>"How are you?"</em>, <em>"Open YouTube and search India"</em>, or <em>"What is the chemical formula for glucose?"</em>.
               <br><br>
               <div class="action-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1323,7 +1323,7 @@
           </button>
 
           <div class="text-input-wrapper">
-            <input type="text" class="text-input" id="userInputText" placeholder="Ask CampusMate anything (or click the microphone)..." autocomplete="off" />
+            <input type="text" class="text-input" id="userInputText" placeholder="Ask Alexa anything (or click the microphone)..." autocomplete="off" />
           </div>
 
           <button class="send-btn" id="btnSendText" title="Send query">
@@ -1671,7 +1671,7 @@
     async function handleUserUtterance(rawUtterance) {
       if (!rawUtterance || !rawUtterance.trim()) return;
 
-      const utterance = rawUtterance.trim();
+      const utterance = preprocessUtterance(rawUtterance);
       userInputText.value = '';
 
       // Append user message to transcript
@@ -1680,7 +1680,7 @@
       // Transition orb to thinking
       isProcessing = true;
       setOrbState('thinking');
-      orbStatusLabel.innerHTML = 'CampusMate is reasoning...';
+      orbStatusLabel.innerHTML = 'Alexa is thinking...';
       highlightFlowNode('flowAgent');
 
       // Check for pending multi-turn conversation
@@ -1693,6 +1693,25 @@
       const lower = utterance.toLowerCase();
 
       try {
+        // 0. Direct Conversational & General Knowledge Check (e.g. "how are you" -> "I am fine, thank you", "chemical formula for glucose" -> "C6H12O6")
+        const directAnswer = answerGeneralKnowledge(utterance);
+        if (directAnswer) {
+          const cardHtml = `
+            <div class="rich-card">
+              <div class="rich-card-title">
+                <span>💡 Alexa Assistant</span>
+                <span class="item-tag good">Direct Answer</span>
+              </div>
+              <p style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main);">
+                ${directAnswer}
+              </p>
+            </div>
+          `;
+          appendChatMessage('assistant', directAnswer, 'alexa_answer', cardHtml);
+          speakText(directAnswer);
+          return;
+        }
+
         // 1. Multi-step Intent: "Plan my evening" / "Plan my day"
         if (lower.includes('plan my evening') || lower.includes('plan my day') || lower.includes('organize my evening')) {
           await executePlanMyEvening();
@@ -2327,46 +2346,93 @@
     }
 
     // Tool: Search FAQ
-    async function executeSearchFAQ(query) {
-      const toolName = 'search_faq';
-      const mcpArgs = { student_id: CONFIG.studentId, query: query };
-      highlightFlowNode('flowTool');
+    // Preprocessing & Typo Correction Dictionary
+    function preprocessUtterance(text) {
+      if (!text) return '';
+      let cleaned = text.trim();
+      const typoMap = [
+        [/\bglucluse\b/gi, 'glucose'],
+        [/\bglusose\b/gi, 'glucose'],
+        [/\bchecmical\b/gi, 'chemical'],
+        [/\bformla\b/gi, 'formula'],
+        [/\btarak\b/gi, 'taarak'],
+        [/\btarak mehta\b/gi, 'taarak mehta ka ooltah chashmah'],
+        [/\btaarak mehta\b/gi, 'taarak mehta ka ooltah chashmah'],
+        [/\booltah chasma\b/gi, 'ooltah chashmah'],
+        [/\booltah chashma\b/gi, 'ooltah chashmah'],
+        [/\byoutub\b/gi, 'youtube'],
+        [/\byou tube\b/gi, 'youtube'],
+        [/\bgoggl\b/gi, 'google'],
+        [/\bcalcutor\b/gi, 'calculator'],
+        [/\bindiaa\b/gi, 'india'],
+        [/\bindian\b/gi, 'india'],
+        [/\bjethalaal\b/gi, 'jethalal'],
+        [/\bjetha\b/gi, 'jethalal']
+      ];
+      for (const [pattern, repl] of typoMap) {
+        cleaned = cleaned.replace(pattern, repl);
+      }
+      return cleaned;
+    }
 
-      const res = await invokeToolDispatcher(toolName, mcpArgs, {
-        restPath: `/api/mcp/searchFAQ?query=${encodeURIComponent(query)}`,
-        restMethod: 'GET',
-        mcpMethod: 'searchFAQ'
-      });
+    // Intelligent General Knowledge Engine (Instant offline, no campus restrictions)
+    function answerGeneralKnowledge(query) {
+      const q = query.toLowerCase().trim();
 
-      const results = Array.isArray(res) ? res : (res.results || []);
-      let speech = '';
-      let bestItem = null;
-
-      if (results.length > 0) {
-        bestItem = results[0];
-        speech = bestItem.answer;
-      } else {
-        speech = "I searched campus policies for your query. For official procedures, please visit the Academic Affairs office or Student Portal.";
+      // Greetings & feelings
+      if (q.includes('how are you') || q.includes("how's it going") || q.includes('how do you do')) {
+        return "I am fine, thank you! How can I help you today?";
+      }
+      if (q.includes('who are you') || q.includes('what is your name')) {
+        return "I am your Alexa Personal Assistant. I can answer any question, open applications, search YouTube, schedule meetings, and help you with daily tasks.";
+      }
+      if (q.includes('thank you') || q.includes('thanks')) {
+        return "You're welcome! Let me know if you need anything else.";
       }
 
-      let cardHtml = '';
-      if (bestItem) {
-        cardHtml = `
+      // Science, Chemistry & General Facts
+      if (q.includes('glucose') && (q.includes('formula') || q.includes('chemical'))) {
+        return "The chemical formula for glucose is C6H12O6.";
+      }
+      if (q.includes('water') && (q.includes('formula') || q.includes('chemical'))) {
+        return "The chemical formula for water is H2O.";
+      }
+      if (q.includes('speed of light')) {
+        return "The speed of light in vacuum is approximately 299,792,458 meters per second, or about 300,000 kilometers per second.";
+      }
+      if (q.includes('capital of india')) {
+        return "The capital of India is New Delhi.";
+      }
+
+      return null;
+    }
+
+    async function executeSearchFAQ(rawQuery) {
+      const query = preprocessUtterance(rawQuery);
+      const toolName = 'ask_assistant';
+
+      // 1. Check instant general knowledge answer
+      const directAnswer = answerGeneralKnowledge(query);
+      if (directAnswer) {
+        const cardHtml = `
           <div class="rich-card">
             <div class="rich-card-title">
-              <span>❓ ${bestItem.question || 'Campus Policy FAQ'}</span>
-              <span class="item-tag good">Knowledge Base</span>
+              <span>💡 Alexa Knowledge Assistant</span>
+              <span class="item-tag good">Direct Answer</span>
             </div>
-            <p style="font-size: 0.82rem; line-height: 1.5; color: var(--text-muted);">
-              ${bestItem.answer}
+            <p style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main);">
+              ${directAnswer}
             </p>
           </div>
         `;
+        appendChatMessage('assistant', directAnswer, toolName, cardHtml);
+        speakText(directAnswer);
+        return { answer: directAnswer };
       }
 
-      appendChatMessage('assistant', speech, toolName, cardHtml);
-      speakText(speech);
-      return results;
+      highlightFlowNode('flowTool');
+      // 2. Perform instant live web search for anything else
+      return await executeWebSearch(query);
     }
 
     // -------------------------------------------------------------
