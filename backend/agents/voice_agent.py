@@ -118,11 +118,28 @@ class VoiceAgent:
         if any(w in clean_utt for w in ["search ", "who is ", "what is ", "where is ", "when is ", "cricket ", "match "]):
             return self._handle_web_search(student_id, utterance)
 
+        # Human-like conversational chatter & small talk
+        if any(w in clean_utt for w in ["hello", "hi alexa", "hey alexa", "good morning", "good evening", "how are you", "who are you", "what can you do", "thank you", "thanks"]):
+            if any(w in clean_utt for w in ["how are you", "how's it going"]):
+                speech = "I'm doing wonderful, thank you for asking! I'm ready to help you plan your day, schedule meetings, or answer questions. What's on your mind?"
+            elif any(w in clean_utt for w in ["who are you", "what are you"]):
+                speech = "I am your Alexa+ personal assistant. I can schedule your meetings, remind you of your day, open apps, search cricket scores, plan trips, and organize your academic tasks!"
+            elif any(w in clean_utt for w in ["thank you", "thanks"]):
+                speech = "You're very welcome! Let me know whenever you need anything else."
+            else:
+                speech = "Hello! Great to talk with you. How can I help you today? You can ask me to schedule a meeting, open YouTube, or plan your schedule."
+            return {
+                "spoken_response": speech,
+                "tool_calls": [],
+                "data": {"conversation": True},
+                "intent": "conversation"
+            }
+
         return {
-            "spoken_response": "I'm your Alexa+ personal assistant. You can ask me to schedule meetings, remind you today, open YouTube or Google, search live cricket scores, or plan a trip!",
+            "spoken_response": f"I heard you say: '{utterance}'. I can help you with that! Would you like me to search for more details or schedule a task for you?",
             "tool_calls": [],
             "data": {},
-            "intent": "unknown"
+            "intent": "general_dialogue"
         }
 
     def _match_intent(self, text: str) -> str:

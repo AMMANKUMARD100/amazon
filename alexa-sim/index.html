@@ -3182,7 +3182,19 @@
       }
     });
 
-    // App Initialization
+    // App Initialization & Conversational Greeting
+    let hasGreeted = false;
+    function triggerFirstGreeting() {
+      if (hasGreeted) return;
+      hasGreeted = true;
+      const hour = new Date().getHours();
+      const timeGreeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+      const welcomeText = `${timeGreeting}! I am your Alexa personal assistant. I'm ready to help you schedule meetings, plan trips, open apps, or check your schedule. What would you like to do?`;
+      
+      speakText(welcomeText);
+      showToast('Alexa+ Voice Assistant is ready', 'info');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initSpeechRecognition();
       initSpeechSynthesis();
@@ -3194,6 +3206,11 @@
       }
       btnToggleSpeech.classList.toggle('active', CONFIG.speechEnabled);
       speechToggleLabel.textContent = CONFIG.speechEnabled ? 'Audio On' : 'Audio Muted';
+
+      // Greet on first click anywhere (satisfies browser auto-play policy)
+      document.body.addEventListener('click', () => {
+        triggerFirstGreeting();
+      }, { once: true });
     });
   </script>
 </body>
