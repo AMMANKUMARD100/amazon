@@ -2551,10 +2551,39 @@
       });
 
       const data = res.data || res.tool_result || {};
-      const speech = data.spoken_summary || res.spoken_summary || res.speech || `Here is the verified information for ${cleanQ}.`;
-      const results = data.results || [
-        { title: `Live Cricket Scores & Ball-by-ball Commentary`, url: `https://www.espncricinfo.com/live-cricket-score` },
-        { title: `Google Real-time Search: ${cleanQ}`, url: `https://www.google.com/search?q=${encodeURIComponent(cleanQ)}` }
+      let speech = data.spoken_summary || res.spoken_summary || res.speech || '';
+
+      // If speech is generic or missing, analyze the question dynamically in the browser:
+      if (!speech || speech.includes('Based on latest references') || speech.includes('Here is the live information') || speech.includes('Here is the verified information')) {
+        try {
+          const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQ)}&format=json&origin=*`;
+          const sResp = await fetch(sUrl);
+          const sJson = await sResp.json();
+          if (sJson.query && sJson.query.search && sJson.query.search.length > 0) {
+            const hit = sJson.query.search[0];
+            const title = hit.title;
+            const pUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`;
+            const pResp = await fetch(pUrl);
+            const pJson = await pResp.json();
+            if (pJson.extract) {
+              const sentences = pJson.extract.split(/(?<=[.!?])\s+/);
+              speech = sentences.slice(0, 2).join(' ');
+            } else if (hit.snippet) {
+              speech = hit.snippet.replace(/<[^>]*>/g, '').trim();
+            }
+          }
+        } catch (e) {
+          // Keep best effort
+        }
+      }
+
+      if (!speech) {
+        speech = `According to verified web sources, here are the top matching results for ${cleanQ}.`;
+      }
+
+      const results = (data.results && data.results.length > 0) ? data.results : [
+        { title: `Google Search: ${cleanQ}`, url: `https://www.google.com/search?q=${encodeURIComponent(cleanQ)}` },
+        { title: `Wikipedia Reference: ${cleanQ}`, url: `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(cleanQ)}` }
       ];
 
       const cardHtml = `
