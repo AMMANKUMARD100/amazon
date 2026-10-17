@@ -2409,10 +2409,22 @@
       const speech = res.spoken_response || res.speech || `Opening ${target.toUpperCase()} for you now.`;
       const appUrl = (res.data && res.data.url) || (res.tool_result && res.tool_result.url) || `https://${target}.com`;
 
-      // Trigger client-side browser open in new tab
+      // Trigger immediate browser tab opening
       try {
-        window.open(appUrl, '_blank');
-      } catch (e) {}
+        const openedWin = window.open(appUrl, '_blank', 'noopener,noreferrer');
+        if (!openedWin || openedWin.closed || typeof openedWin.closed === 'undefined') {
+          // Fallback if browser blocked popup: location.assign or create link click
+          const a = document.createElement('a');
+          a.href = appUrl;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      } catch (e) {
+        window.location.href = appUrl;
+      }
 
       const cardHtml = `
         <div class="rich-card">

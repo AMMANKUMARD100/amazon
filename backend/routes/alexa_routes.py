@@ -231,10 +231,19 @@ def run_deterministic_engine(student_id, utterance):
         query = None
         if "youtube" in text:
             target = "youtube"
+            m = re.search(r"(?:search for|search|play|for)\s+(.+)$", utterance, re.IGNORECASE)
+            if m:
+                query = m.group(1).strip()
         elif "spotify" in text:
             target = "spotify"
         elif "calculator" in text:
             target = "calculator"
+        elif "google" in text:
+            target = "google"
+            m = re.search(r"(?:search for|search|for)\s+(.+)$", utterance, re.IGNORECASE)
+            if m:
+                query = m.group(1).strip()
+
         res = open_app_or_site(target=target, query=query)
         return {
             "speech": res["spoken_response"],
