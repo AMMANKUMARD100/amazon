@@ -2412,9 +2412,39 @@
       }
 
       // Wars & Military History
-      if (q.includes('kargil') && (q.includes('who won') || q.includes('won') || q.includes('result') || q.includes('winner'))) {
+      const wantsDetail = q.includes('detail') || q.includes('explain') || q.includes('history of') || q.includes('in detail') || q.includes('describe');
+
+      // 1965 Indo-Pak War
+      if ((q.includes('1965') && (q.includes('war') || q.includes('conflict'))) || (q.includes('war') && q.includes('1965'))) {
+        if (q.includes('who won') || q.includes('who want') || q.includes('who won the war') || q.includes('won') || q.includes('winner') || q.includes('result') || !wantsDetail) {
+          if (wantsDetail) {
+            return "In the 1965 war between India and Pakistan, India gained the upper hand militarily and defended Jammu and Kashmir, capturing strategic territory before a UN-mandated ceasefire and the Tashkent Declaration were signed.";
+          }
+          return "India won the 1965 war against Pakistan, successfully repelling Pakistani infiltration under Operation Gibraltar and defending Kashmir.";
+        }
+      }
+
+      // 1971 Indo-Pak War
+      if ((q.includes('1971') && (q.includes('war') || q.includes('conflict'))) || (q.includes('war') && q.includes('1971')) || q.includes('bangladesh liberation war')) {
+        if (wantsDetail) {
+          return "India decisively won the 1971 war against Pakistan in just 13 days, resulting in the surrender of over 93,000 Pakistani personnel and the liberation and creation of Bangladesh.";
+        }
+        return "India won the 1971 war decisively against Pakistan, leading to the liberation and creation of Bangladesh.";
+      }
+
+      // 1999 Kargil War
+      if (q.includes('kargil')) {
+        if (wantsDetail) {
+          return "India won the Kargil War in 1999 through Operation Vijay, regaining all infiltrated mountain peaks in Jammu and Kashmir and expelling Pakistani military intruders.";
+        }
         return "India won the Kargil War in 1999, successfully regaining control of all infiltrated territory from Pakistan under Operation Vijay.";
       }
+
+      // 1947 Indo-Pak War
+      if ((q.includes('1947') || q.includes('1948')) && (q.includes('war') || q.includes('kashmir war'))) {
+        return "In the 1947–1948 war, India successfully defended Srinagar and retained control over Jammu and Kashmir.";
+      }
+
       if (q.includes('who won') && (q.includes('world war 2') || q.includes('world war ii') || q.includes('second world war'))) {
         return "The Allied Powers—led by Great Britain, the United States, the Soviet Union, and China—won World War II in 1945.";
       }

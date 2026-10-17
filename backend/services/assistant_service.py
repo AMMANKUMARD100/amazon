@@ -305,8 +305,24 @@ def search_web_instant(query: str) -> Dict[str, Any]:
     elif ("first" in ql or "1st" in ql) and "president" in ql and "india" in ql:
         direct = "Dr. Rajendra Prasad was the first President of India."
     # Wars & Conflicts
-    elif "kargil" in ql and any(k in ql for k in ["who won", "won", "winner", "result"]):
-        direct = "India won the Kargil War in 1999, successfully regaining control of all infiltrated territory from Pakistan under Operation Vijay."
+    wants_detail = any(k in ql for k in ["detail", "explain", "history of", "in detail", "describe"])
+    if "1965" in ql and ("war" in ql or "conflict" in ql or "india" in ql):
+        if wants_detail:
+            direct = "In the 1965 war between India and Pakistan, India gained the upper hand militarily and defended Jammu and Kashmir, capturing strategic territory before a UN ceasefire and the Tashkent Declaration were signed."
+        else:
+            direct = "India won the 1965 war against Pakistan, successfully repelling Pakistani infiltration under Operation Gibraltar and defending Kashmir."
+    elif "1971" in ql and ("war" in ql or "conflict" in ql or "bangladesh" in ql):
+        if wants_detail:
+            direct = "India decisively won the 1971 war against Pakistan in just 13 days, resulting in the surrender of over 93,000 Pakistani personnel and the liberation and creation of Bangladesh."
+        else:
+            direct = "India won the 1971 war decisively against Pakistan, leading to the liberation and creation of Bangladesh."
+    elif "kargil" in ql:
+        if wants_detail:
+            direct = "India won the Kargil War in 1999 through Operation Vijay, regaining all infiltrated mountain peaks in Jammu and Kashmir and expelling Pakistani military intruders."
+        else:
+            direct = "India won the Kargil War in 1999, successfully regaining control of all infiltrated territory from Pakistan under Operation Vijay."
+    elif ("1947" in ql or "1948" in ql) and ("war" in ql or "kashmir" in ql):
+        direct = "In the 1947–1948 war, India successfully defended Srinagar and retained control over Jammu and Kashmir."
     elif "who won" in ql and ("world war 2" in ql or "world war ii" in ql or "second world war" in ql):
         direct = "The Allied Powers—led by Great Britain, the United States, the Soviet Union, and China—won World War II in 1945."
     elif "who won" in ql and ("world war 1" in ql or "world war i" in ql or "first world war" in ql):
