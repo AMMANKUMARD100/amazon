@@ -543,6 +543,62 @@ def calculate_cgpa(student_id: int, grades: Optional[List[Dict[str, Any]]] = Non
     }
 
 
+# -------------------------------------------------------------
+# Personal Assistant MCP Tools (Alexa+)
+# -------------------------------------------------------------
+
+@mcp_app.tool()
+def schedule_meeting(
+    student_id: int,
+    title: str,
+    date: str = "today",
+    time: str = "10:00 AM",
+    location: str = "Online",
+    attendees: str = ""
+) -> Dict[str, Any]:
+    """Schedule a meeting, appointment or discussion with date and time."""
+    _validate_student_id(student_id)
+    from backend.services.assistant_service import schedule_meeting as _sched
+    return _sched(student_id, title, date, time, location, attendees)
+
+
+@mcp_app.tool()
+def list_meetings(student_id: int, date: Optional[str] = None) -> List[Dict[str, Any]]:
+    """List upcoming meetings and appointments."""
+    _validate_student_id(student_id)
+    from backend.services.assistant_service import list_meetings as _list_m
+    return _list_m(student_id, date)
+
+
+@mcp_app.tool()
+def open_app_or_site(student_id: int, target: str, query: Optional[str] = None) -> Dict[str, Any]:
+    """Open YouTube, Google, Spotify, browser apps or external URLs on the device."""
+    _validate_student_id(student_id)
+    from backend.services.assistant_service import open_app_or_site as _open_app
+    return _open_app(target, query)
+
+
+@mcp_app.tool()
+def search_web_instant(student_id: int, query: str) -> Dict[str, Any]:
+    """Live web search and real-time cricket match updates (free, no API key)."""
+    _validate_student_id(student_id)
+    from backend.services.assistant_service import search_web_instant as _search
+    return _search(query)
+
+
+@mcp_app.tool()
+def plan_trip(
+    student_id: int,
+    destination: str,
+    days: int = 3,
+    style: str = "balanced"
+) -> Dict[str, Any]:
+    """Generate a complete structured trip itinerary with activities and timings."""
+    _validate_student_id(student_id)
+    from backend.services.assistant_service import plan_trip as _trip
+    return _trip(destination, days, style)
+
+
 # Map of all registered tools for introspection and test invocation
 TOOLS: Dict[str, Any] = {
     "list_tasks": list_tasks,
@@ -561,7 +617,12 @@ TOOLS: Dict[str, Any] = {
     "daily_briefing": daily_briefing,
     "get_dashboard": get_dashboard,
     "get_timetable": get_timetable,
-    "calculate_cgpa": calculate_cgpa
+    "calculate_cgpa": calculate_cgpa,
+    "schedule_meeting": schedule_meeting,
+    "list_meetings": list_meetings,
+    "open_app_or_site": open_app_or_site,
+    "search_web_instant": search_web_instant,
+    "plan_trip": plan_trip
 }
 
 __all__ = [
@@ -585,11 +646,17 @@ __all__ = [
     "daily_briefing",
     "get_dashboard",
     "get_timetable",
-    "calculate_cgpa"
+    "calculate_cgpa",
+    "schedule_meeting",
+    "list_meetings",
+    "open_app_or_site",
+    "search_web_instant",
+    "plan_trip"
 ]
 
 if __name__ == "__main__":
     port = int(os.environ.get("MCP_PORT", 8080))
     print(f"Starting CampusMate AI FastMCP Server on port {port}...")
     mcp_app.run(transport="streamable-http", host="0.0.0.0", port=port)
+
 

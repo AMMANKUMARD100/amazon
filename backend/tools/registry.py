@@ -686,8 +686,125 @@ tool_registry.register(ToolDefinition(
     destructive=False
 ))
 
+# -------------------------------------------------------------
+# Personal Assistant Extensions (Alexa+)
+# -------------------------------------------------------------
+
+def _handle_schedule_meeting(student_id: int, args: Dict[str, Any]) -> Any:
+    from backend.services.assistant_service import schedule_meeting
+    return schedule_meeting(
+        student_id=student_id,
+        title=args.get("title", ""),
+        date=args.get("date", "today"),
+        time=args.get("time", "10:00 AM"),
+        location=args.get("location", "Online"),
+        attendees=args.get("attendees", "")
+    )
+
+def _handle_list_meetings(student_id: int, args: Dict[str, Any]) -> Any:
+    from backend.services.assistant_service import list_meetings
+    return list_meetings(student_id=student_id, date=args.get("date"))
+
+def _handle_open_app_or_site(student_id: int, args: Dict[str, Any]) -> Any:
+    from backend.services.assistant_service import open_app_or_site
+    return open_app_or_site(target=args.get("target", ""), query=args.get("query"))
+
+def _handle_search_web_instant(student_id: int, args: Dict[str, Any]) -> Any:
+    from backend.services.assistant_service import search_web_instant
+    return search_web_instant(query=args.get("query", ""))
+
+def _handle_plan_trip(student_id: int, args: Dict[str, Any]) -> Any:
+    from backend.services.assistant_service import plan_trip
+    return plan_trip(
+        destination=args.get("destination", "Goa"),
+        days=args.get("days", 3),
+        style=args.get("style", "balanced")
+    )
+
+tool_registry.register(ToolDefinition(
+    name="schedule_meeting",
+    description="Schedule a meeting, appointment or discussion with date and time.",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "date": {"type": "string"},
+            "time": {"type": "string"},
+            "location": {"type": "string"},
+            "attendees": {"type": "string"}
+        },
+        "required": ["title"],
+        "additionalProperties": False
+    },
+    handler=_handle_schedule_meeting,
+    destructive=False
+))
+
+tool_registry.register(ToolDefinition(
+    name="list_meetings",
+    description="List upcoming meetings and calendar appointments.",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "date": {"type": "string"}
+        },
+        "additionalProperties": False
+    },
+    handler=_handle_list_meetings,
+    destructive=False
+))
+
+tool_registry.register(ToolDefinition(
+    name="open_app_or_site",
+    description="Open YouTube, Google, Spotify, browser apps or external URLs on the device.",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "target": {"type": "string"},
+            "query": {"type": "string"}
+        },
+        "required": ["target"],
+        "additionalProperties": False
+    },
+    handler=_handle_open_app_or_site,
+    destructive=False
+))
+
+tool_registry.register(ToolDefinition(
+    name="search_web_instant",
+    description="Live web search and real-time cricket match updates (free, no API key).",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "query": {"type": "string"}
+        },
+        "required": ["query"],
+        "additionalProperties": False
+    },
+    handler=_handle_search_web_instant,
+    destructive=False
+))
+
+tool_registry.register(ToolDefinition(
+    name="plan_trip",
+    description="Generate a complete structured trip itinerary with activities and timings.",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "destination": {"type": "string"},
+            "days": {"type": "integer"},
+            "style": {"type": "string"}
+        },
+        "required": ["destination"],
+        "additionalProperties": False
+    },
+    handler=_handle_plan_trip,
+    destructive=False
+))
+
 
 def execute_tool(tool_name: str, student_id: int, args: Dict[str, Any]) -> Dict[str, Any]:
     """Convenience wrapper for tool_registry.execute()."""
     return tool_registry.execute(tool_name, student_id, args)
+
 

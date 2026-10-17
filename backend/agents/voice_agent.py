@@ -30,6 +30,10 @@ class VoiceAgent:
 
     # Intent patterns: (regex_pattern, intent_name, priority)
     INTENT_PATTERNS: List[Tuple[str, str, int]] = [
+        (r"\b(open youtube|open google|open spotify|open app|open website|open calculator|open browser|launch|open chrome)\b", "open_app", 15),
+        (r"\b(cricket|match today|live score|score of|search for|google search|search web|search the internet|look up|who won)\b", "web_search", 14),
+        (r"\b(plan a trip|plan trip|travel to|vacation|visit goa|trip to|tour plan|itinerary)\b", "plan_trip", 13),
+        (r"\b(schedule meeting|schedule a meeting|book meeting|set meeting|remind me today|meeting reminder|my meetings|upcoming meetings|do i have any meeting)\b", "meeting", 12),
         (r"\b(plan my evening|plan my day|plan tonight)\b", "plan_day", 10),
         (r"\b(how am i doing|how('?s| is) my progress|my status|academic status)\b", "status_check", 9),
         (r"\b(am i at risk|risk|danger|warning)\b", "risk_check", 8),
@@ -72,6 +76,10 @@ class VoiceAgent:
         intent = self._match_intent(utterance.lower().strip())
 
         handlers = {
+            "open_app": self._handle_open_app,
+            "web_search": self._handle_web_search,
+            "plan_trip": self._handle_plan_trip,
+            "meeting": self._handle_meeting,
             "plan_day": self._handle_plan_day,
             "status_check": self._handle_status_check,
             "risk_check": self._handle_risk_check,
@@ -103,8 +111,15 @@ class VoiceAgent:
                     "intent": intent
                 }
 
+        # Dynamic fallback for general requests: check if it's an app opening, search, or query
+        clean_utt = utterance.lower().strip()
+        if any(w in clean_utt for w in ["open ", "launch ", "go to "]):
+            return self._handle_open_app(student_id, utterance)
+        if any(w in clean_utt for w in ["search ", "who is ", "what is ", "where is ", "when is ", "cricket ", "match "]):
+            return self._handle_web_search(student_id, utterance)
+
         return {
-            "spoken_response": "I'm not sure what you're asking. Try saying something like 'plan my evening', 'how am I doing', or 'what are my assignments'.",
+            "spoken_response": "I'm your Alexa+ personal assistant. You can ask me to schedule meetings, remind you today, open YouTube or Google, search live cricket scores, or plan a trip!",
             "tool_calls": [],
             "data": {},
             "intent": "unknown"
@@ -492,6 +507,118 @@ class VoiceAgent:
             "tool_calls": [{"tool": "search_faq", "args": {"query": query}, "result": results}],
             "data": {"faq_results": results}
         }
+
+    # -------------------------------------------------------------
+    # Personal Assistant Feature Handlers (Alexa+)
+    # -------------------------------------------------------------
+
+    def _handle_open_app(self, student_id: int, utterance: str) -> Dict[str, Any]:
+        from backend.services.assistant_service import open_app_or_site
+        text = utterance.lower().strip()
+        # Extract target app
+        target = "google"
+        query = None
+
+        if "youtube" in text:
+            target = "youtube"
+            m = re.search(r"(?:search|play|for)\s+(.+)$", text)
+            if m:
+                query = m.group(1).strip()
+        elif "spotify" in text:
+            target = "spotify"
+        elif "google" in text:
+            target = "google"
+            m = re.search(r"(?:search|for)\s+(.+)$", text)
+            if m:
+                query = m.group(1).strip()
+        elif "calculator" in text:
+            target = "calculator"
+        else:
+            # Try to grab whatever follows "open"
+            m = re.search(r"(?:open|launch|go to)\s+([a-zA-Z0-9\.\_\-]+)", text)
+            if m:
+                target = m.group(1).strip()
+
+        res = open_app_or_site(target=target, query=query)
+        return {
+            "spoken_response": res.get("spoken_response", f"Opening {target} for you."),
+            "tool_calls": [{"tool": "open_app_or_site", "args": {"target": target, "query": query}, "result": res}],
+            "data": res
+        }
+
+    def _handle_web_search(self, student_id: int, utterance: str) -> Dict[str, Any]:
+        from backend.services.assistant_service import search_web_instant
+        text = utterance.strip()
+        # Clean query prefixes
+        query = re.sub(r"^(?:alexa\s+|please\s+)?(?:search for|search|google search|look up|what is|who is|where is|tell me about)\s+", "", text, flags=re.IGNORECASE).strip()
+        if not query:
+            query = text
+
+        res = search_web_instant(query=query)
+        return {
+            "spoken_response": res.get("spoken_summary", f"Here are the search results for {query}."),
+            "tool_calls": [{"tool": "search_web_instant", "args": {"query": query}, "result": res}],
+            "data": res
+        }
+
+    def _handle_plan_trip(self, student_id: int, utterance: str) -> Dict[str, Any]:
+        from backend.services.assistant_service import plan_trip
+        text = utterance.strip()
+        # Extract destination
+        dest_match = re.search(r"(?:to|for|visit|in)\s+([a-zA-Z\s]+?)(?:\s+for|\s+\d+|\s+days|\s+trip|\.|$)", text, re.IGNORECASE)
+        dest = dest_match.group(1).strip() if dest_match else "Goa"
+        
+        # Extract days
+        days_match = re.search(r"(\d+)\s*(?:day|days)", text, re.IGNORECASE)
+        days = int(days_match.group(1)) if days_match else 3
+
+        res = plan_trip(destination=dest, days=days)
+        return {
+            "spoken_response": res.get("spoken_response", f"Here is your {days}-day plan for {dest}."),
+            "tool_calls": [{"tool": "plan_trip", "args": {"destination": dest, "days": days}, "result": res}],
+            "data": res
+        }
+
+    def _handle_meeting(self, student_id: int, utterance: str) -> Dict[str, Any]:
+        from backend.services.assistant_service import schedule_meeting, list_meetings, get_today_meeting_reminder
+        text = utterance.lower().strip()
+
+        # Check if user is asking for meeting reminders or listing meetings
+        if any(k in text for k in ["remind me today", "today's meeting", "what meeting", "do i have any meeting", "my meetings", "upcoming meetings"]):
+            res = get_today_meeting_reminder(student_id)
+            return {
+                "spoken_response": res.get("spoken_reminder"),
+                "tool_calls": [{"tool": "get_today_meeting_reminder", "args": {}, "result": res}],
+                "data": res
+            }
+
+        # Otherwise: scheduling a meeting
+        # Extract title
+        title_match = re.search(r"(?:schedule|book|set)?\s*(?:a\s+)?meeting\s+(?:with|about|called|for)?\s*(.+?)(?:\s+(?:at|on|tomorrow|today|\d{1,2}:|\d{4}-)|$)", utterance, re.IGNORECASE)
+        title = title_match.group(1).strip() if title_match else "Discussion"
+        if not title:
+            title = "Project Sync"
+
+        # Extract time
+        time_match = re.search(r"(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)", utterance, re.IGNORECASE)
+        meeting_time = time_match.group(1).upper() if time_match else "3:00 PM"
+
+        # Extract date
+        meeting_date = "today"
+        if "tomorrow" in text:
+            meeting_date = "tomorrow"
+        else:
+            date_match = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", utterance)
+            if date_match:
+                meeting_date = date_match.group(1)
+
+        res = schedule_meeting(student_id=student_id, title=title, date=meeting_date, time=meeting_time)
+        return {
+            "spoken_response": res.get("spoken_confirmation", f"Scheduled meeting '{title}' for {meeting_date} at {meeting_time}."),
+            "tool_calls": [{"tool": "schedule_meeting", "args": {"title": title, "date": meeting_date, "time": meeting_time}, "result": res}],
+            "data": res
+        }
+
 
 
 # Module-level singleton

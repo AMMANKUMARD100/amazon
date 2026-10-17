@@ -1243,6 +1243,21 @@
 
         <!-- Quick Utterance Chips -->
         <div class="quick-chips-wrapper">
+          <button class="chip-btn special-plan" data-utterance="Remind me of my meetings today">
+            ⏰ Remind Today
+          </button>
+          <button class="chip-btn" data-utterance="Schedule a meeting with Team tomorrow at 3 PM">
+            📅 Schedule Meeting
+          </button>
+          <button class="chip-btn" data-utterance="Open YouTube">
+            ▶️ Open YouTube
+          </button>
+          <button class="chip-btn" data-utterance="Open Google and search for cricket match today live score">
+            🏏 Cricket Live Score
+          </button>
+          <button class="chip-btn" data-utterance="Plan a trip to Goa for 3 days">
+            ✈️ Plan Trip to Goa
+          </button>
           <button class="chip-btn special-plan" data-utterance="Plan my evening">
             🌙 Plan My Evening
           </button>
@@ -1263,12 +1278,6 @@
           </button>
           <button class="chip-btn" data-utterance="What is my CGPA?">
             🎓 My CGPA
-          </button>
-          <button class="chip-btn" data-utterance="When are my exams?">
-            📑 Upcoming Exams
-          </button>
-          <button class="chip-btn" data-utterance="What is the hostel curfew policy?">
-            ❓ FAQ Policy
           </button>
         </div>
       </div>
@@ -1687,6 +1696,22 @@
         // 1. Multi-step Intent: "Plan my evening" / "Plan my day"
         if (lower.includes('plan my evening') || lower.includes('plan my day') || lower.includes('organize my evening')) {
           await executePlanMyEvening();
+        }
+        // 1.5 Open App / Website: "open youtube", "open google", "launch", etc.
+        else if (lower.includes('open youtube') || lower.includes('open google') || lower.includes('open spotify') || lower.includes('open app') || lower.includes('open website') || lower.includes('launch') || lower.startsWith('open ')) {
+          await executeOpenApp(utterance);
+        }
+        // 1.6 Cricket Live Scores & Instant Web Search: "cricket", "match today", "search for"
+        else if (lower.includes('cricket') || lower.includes('match today') || lower.includes('live score') || lower.includes('search for') || lower.includes('google search') || lower.includes('search web')) {
+          await executeWebSearch(utterance);
+        }
+        // 1.7 Trip Planning: "plan a trip", "plan trip", "travel to", "vacation"
+        else if (lower.includes('plan a trip') || lower.includes('plan trip') || lower.includes('travel to') || lower.includes('vacation') || lower.includes('trip to') || lower.includes('itinerary')) {
+          await executePlanTrip(utterance);
+        }
+        // 1.8 Meetings & Voice Reminders: "meeting", "schedule meeting", "remind me today"
+        else if (lower.includes('meeting') || lower.includes('remind me today') || lower.includes('remind today') || lower.includes('upcoming meeting')) {
+          await executeMeetingAction(utterance);
         }
         // 2. Add task intent: "add task" / "new assignment" / "remind me to"
         else if (lower.includes('add task') || lower.includes('new assignment') || lower.includes('create task') || lower.includes('remind me to')) {
@@ -2343,6 +2368,247 @@
       speakText(speech);
       return results;
     }
+
+    // -------------------------------------------------------------
+    // Personal Assistant Tool Handlers (Alexa+)
+    // -------------------------------------------------------------
+
+    // Tool: Open App or Website
+    async function executeOpenApp(utterance) {
+      const toolName = 'open_app_or_site';
+      let target = 'google';
+      let query = null;
+      const lower = utterance.toLowerCase();
+
+      if (lower.includes('youtube')) {
+        target = 'youtube';
+        const m = lower.match(/(?:search|play|for)\s+(.+)$/);
+        if (m) query = m[1].trim();
+      } else if (lower.includes('spotify')) {
+        target = 'spotify';
+      } else if (lower.includes('google')) {
+        target = 'google';
+        const m = lower.match(/(?:search|for)\s+(.+)$/);
+        if (m) query = m[1].trim();
+      } else if (lower.includes('calculator')) {
+        target = 'calculator';
+      } else {
+        const m = lower.match(/(?:open|launch|go to)\s+([a-zA-Z0-9\.\_\-]+)/);
+        if (m) target = m[1].trim();
+      }
+
+      highlightFlowNode('flowTool');
+      const mcpArgs = { student_id: CONFIG.studentId, target: target, query: query };
+      const res = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/alexa/intent`,
+        restMethod: 'POST',
+        restBody: { utterance: utterance },
+        mcpMethod: 'open_app_or_site'
+      });
+
+      const speech = res.spoken_response || res.speech || `Opening ${target.toUpperCase()} for you now.`;
+      const appUrl = (res.data && res.data.url) || (res.tool_result && res.tool_result.url) || `https://${target}.com`;
+
+      // Trigger client-side browser open in new tab
+      try {
+        window.open(appUrl, '_blank');
+      } catch (e) {}
+
+      const cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>🚀 Desktop App Launcher</span>
+            <span class="item-tag good">Active</span>
+          </div>
+          <div class="rich-list">
+            <div class="rich-list-item">
+              <div>
+                <strong>${target.toUpperCase()}</strong>
+                <div style="font-size: 0.74rem; color: var(--text-dim);">${appUrl}</div>
+              </div>
+              <a href="${appUrl}" target="_blank" style="padding: 0.35rem 0.75rem; border-radius: 6px; background: var(--alexa-blue); color: #fff; text-decoration: none; font-size: 0.75rem; font-weight: 600;">Open Direct ↗</a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return res;
+    }
+
+    // Tool: Instant Web Search & Live Cricket Scores
+    async function executeWebSearch(utterance) {
+      const toolName = 'search_web_instant';
+      const cleanQ = utterance.replace(/^(?:alexa\s+|please\s+)?(?:search for|search|google search|look up|what is|who is)\s+/i, '').trim();
+      const mcpArgs = { student_id: CONFIG.studentId, query: cleanQ || utterance };
+
+      highlightFlowNode('flowTool');
+      const res = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/alexa/intent`,
+        restMethod: 'POST',
+        restBody: { utterance: utterance },
+        mcpMethod: 'search_web_instant'
+      });
+
+      const speech = res.spoken_summary || res.speech || `Here is the live information for ${cleanQ}.`;
+      const data = res.data || res.tool_result || {};
+      const results = data.results || [
+        { title: `Live Cricket Scores & Ball-by-ball Commentary`, url: `https://www.espncricinfo.com/live-cricket-score` },
+        { title: `Google Real-time Search: ${cleanQ}`, url: `https://www.google.com/search?q=${encodeURIComponent(cleanQ)}` }
+      ];
+
+      const cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>🔍 ${data.is_cricket ? '🏏 Live Cricket Match & Scores' : '🌐 Web Search Results'}</span>
+            <span class="item-tag good">Zero-API Fast</span>
+          </div>
+          <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main); margin-bottom: 0.75rem;">
+            ${speech}
+          </p>
+          <div class="rich-list">
+            ${results.map(r => `
+              <div class="rich-list-item">
+                <a href="${r.url}" target="_blank" style="color: var(--alexa-cyan); text-decoration: none; font-size: 0.8rem; font-weight: 600;">
+                  ${r.title} ↗
+                </a>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return res;
+    }
+
+    // Tool: Trip Itinerary Planner
+    async function executePlanTrip(utterance) {
+      const toolName = 'plan_trip';
+      const destMatch = utterance.match(/(?:to|visit|in)\s+([a-zA-Z\s]+?)(?:\s+for|\s+\d+|\s+days|\.|$)/i);
+      const dest = destMatch ? destMatch[1].trim() : "Goa";
+      const daysMatch = utterance.match(/(\d+)\s*days?/i);
+      const days = daysMatch ? parseInt(daysMatch[1]) : 3;
+
+      const mcpArgs = { student_id: CONFIG.studentId, destination: dest, days: days, style: 'balanced' };
+      highlightFlowNode('flowTool');
+
+      const res = await invokeToolDispatcher(toolName, mcpArgs, {
+        restPath: `/api/alexa/intent`,
+        restMethod: 'POST',
+        restBody: { utterance: utterance },
+        mcpMethod: 'plan_trip'
+      });
+
+      const speech = res.spoken_response || res.speech || `I have organized a complete ${days}-day trip to ${dest} for you!`;
+      const data = res.data || res.tool_result || {};
+      const itinerary = data.itinerary || [
+        { day: 1, title: `Day 1: Arrival & Exploring ${dest}`, morning: 'Arrival, brunch, and check-in', evening: 'Sunset beach walk and seafood dinner' },
+        { day: 2, title: `Day 2: Heritage & Adventure Tour`, morning: 'Forts, water sports, and photography', evening: 'Night market and live music bistro' },
+        { day: 3, title: `Day 3: Sightseeing & Departure`, morning: 'Local markets and souvenir shopping', evening: 'Farewell dinner & transit to airport' }
+      ];
+
+      const cardHtml = `
+        <div class="rich-card">
+          <div class="rich-card-title">
+            <span>✈️ Itinerary: ${dest}</span>
+            <span class="item-tag good">${days} Days Planned</span>
+          </div>
+          <div class="rich-list">
+            ${itinerary.map(item => `
+              <div style="margin-bottom: 0.6rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-weight: 700; color: var(--alexa-cyan); font-size: 0.85rem; margin-bottom: 0.2rem;">
+                  ${item.title || `Day ${item.day}`}
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                  🌅 <strong>Morning:</strong> ${item.morning}<br>
+                  🌙 <strong>Evening:</strong> ${item.evening}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      appendChatMessage('assistant', speech, toolName, cardHtml);
+      speakText(speech);
+      return res;
+    }
+
+    // Tool: Meeting Management & Voice Reminders
+    async function executeMeetingAction(utterance) {
+      const lower = utterance.toLowerCase();
+      const isReminder = lower.includes('remind') || lower.includes('what meeting') || lower.includes('my meeting') || lower.includes('upcoming');
+      
+      highlightFlowNode('flowTool');
+      if (isReminder) {
+        const toolName = 'list_meetings';
+        const mcpArgs = { student_id: CONFIG.studentId };
+        const res = await invokeToolDispatcher(toolName, mcpArgs, {
+          restPath: `/api/alexa/intent`,
+          restMethod: 'POST',
+          restBody: { utterance: 'remind me today' },
+          mcpMethod: 'list_meetings'
+        });
+
+        const speech = res.spoken_reminder || res.speech || "Hello! You have upcoming meetings on your calendar today.";
+        const cardHtml = `
+          <div class="rich-card">
+            <div class="rich-card-title">
+              <span>⏰ Spoken Voice Reminder</span>
+              <span class="item-tag good">Active</span>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-main); line-height: 1.5;">
+              ${speech}
+            </p>
+          </div>
+        `;
+        appendChatMessage('assistant', speech, toolName, cardHtml);
+        speakText(speech);
+        return res;
+      } else {
+        // Schedule Meeting
+        const toolName = 'schedule_meeting';
+        const titleMatch = utterance.match(/meeting\s+(?:with|for|about)?\s*(.+?)(?:\s+(?:at|on|tomorrow|today|\d{1,2}:)|$)/i);
+        const title = titleMatch ? titleMatch[1].trim() : "Project Review";
+        const timeMatch = utterance.match(/(\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)/i);
+        const time = timeMatch ? timeMatch[1].toUpperCase() : "3:00 PM";
+        const date = lower.includes('tomorrow') ? 'tomorrow' : 'today';
+
+        const mcpArgs = { student_id: CONFIG.studentId, title: title, date: date, time: time };
+        const res = await invokeToolDispatcher(toolName, mcpArgs, {
+          restPath: `/api/alexa/intent`,
+          restMethod: 'POST',
+          restBody: { utterance: utterance },
+          mcpMethod: 'schedule_meeting'
+        });
+
+        const speech = res.spoken_confirmation || res.speech || `Scheduled meeting "${title}" for ${date} at ${time}.`;
+        const cardHtml = `
+          <div class="rich-card">
+            <div class="rich-card-title">
+              <span>📅 Meeting Scheduled</span>
+              <span class="item-tag good">${time}</span>
+            </div>
+            <div class="rich-list">
+              <div class="rich-list-item">
+                <div>
+                  <strong>${title}</strong>
+                  <div style="font-size: 0.74rem; color: var(--text-dim);">Date: ${date} &bull; Time: ${time}</div>
+                </div>
+                <span class="item-tag warning">Confirmed</span>
+              </div>
+            </div>
+          </div>
+        `;
+        appendChatMessage('assistant', speech, toolName, cardHtml);
+        speakText(speech);
+        return res;
+      }
+    }
+
 
     /* -------------------------------------------------------------
      * UNIVERSAL MCP TOOL DISPATCHER (FLASK REST / DIRECT MCP / MOCK)

@@ -224,7 +224,76 @@ def run_deterministic_engine(student_id, utterance):
             "mode": "deterministic_demo"
         }
 
-    # 7. FAQ search
+    # 7. Open App / Website
+    if any(k in text for k in ["open youtube", "open google", "open spotify", "launch", "open website", "open app"]):
+        from backend.services.assistant_service import open_app_or_site
+        target = "google"
+        query = None
+        if "youtube" in text:
+            target = "youtube"
+        elif "spotify" in text:
+            target = "spotify"
+        elif "calculator" in text:
+            target = "calculator"
+        res = open_app_or_site(target=target, query=query)
+        return {
+            "speech": res["spoken_response"],
+            "card": {"title": f"Opening {res['app']}", "content": res["spoken_response"]},
+            "action_executed": "open_app_or_site",
+            "tool_result": res,
+            "mode": "deterministic_demo"
+        }
+
+    # 8. Web Search & Cricket Matches
+    if any(k in text for k in ["cricket", "match today", "live score", "search for", "google search", "search web"]):
+        from backend.services.assistant_service import search_web_instant
+        q = re.sub(r"^(?:search for|search|google search|look up)\s+", "", utterance, flags=re.IGNORECASE).strip()
+        res = search_web_instant(q or utterance)
+        return {
+            "speech": res["spoken_summary"],
+            "card": {"title": f"Search: {res['query']}", "content": res["spoken_summary"]},
+            "action_executed": "search_web_instant",
+            "tool_result": res,
+            "mode": "deterministic_demo"
+        }
+
+    # 9. Plan a Trip
+    if any(k in text for k in ["plan a trip", "plan trip", "travel to", "vacation", "trip to"]):
+        from backend.services.assistant_service import plan_trip
+        dest_match = re.search(r"(?:to|visit|in)\s+([a-zA-Z\s]+?)(?:\s+for|\s+\d+|\s+days|\.|$)", utterance, re.IGNORECASE)
+        dest = dest_match.group(1).strip() if dest_match else "Goa"
+        res = plan_trip(destination=dest, days=3)
+        return {
+            "speech": res["spoken_response"],
+            "card": {"title": f"Trip Plan: {dest}", "content": res["spoken_response"]},
+            "action_executed": "plan_trip",
+            "tool_result": res,
+            "mode": "deterministic_demo"
+        }
+
+    # 10. Meetings & Reminders
+    if any(k in text for k in ["schedule meeting", "meeting", "remind me today", "my meetings"]):
+        from backend.services.assistant_service import schedule_meeting, get_today_meeting_reminder
+        if any(k in text for k in ["remind me today", "today's meeting", "my meetings"]):
+            res = get_today_meeting_reminder(student_id)
+            return {
+                "speech": res["spoken_reminder"],
+                "card": {"title": "Today's Meetings", "content": res["spoken_reminder"]},
+                "action_executed": "get_today_meeting_reminder",
+                "tool_result": res,
+                "mode": "deterministic_demo"
+            }
+        else:
+            res = schedule_meeting(student_id=student_id, title="Project Sync", date="today", time="3:00 PM")
+            return {
+                "speech": res["spoken_confirmation"],
+                "card": {"title": "Meeting Scheduled", "content": res["spoken_confirmation"]},
+                "action_executed": "schedule_meeting",
+                "tool_result": res,
+                "mode": "deterministic_demo"
+            }
+
+    # 11. FAQ search
     out_faq = execute_tool("search_faq", student_id, {"query": utterance})
     faq_results = out_faq.get("result", []) if out_faq["success"] else []
     if faq_results:
@@ -240,13 +309,13 @@ def run_deterministic_engine(student_id, utterance):
 
     # Default fallback
     speech = (
-        "I am your CampusMate AI assistant. You can ask me to list your tasks, "
-        "add new assignments with a due date, check your attendance, "
-        "show today's lectures, or generate a personalized study plan."
+        "I am your Alexa+ Personal Assistant. You can ask me to schedule meetings, "
+        "remind you of today's events, open YouTube or Google, search live cricket scores, "
+        "plan a vacation trip, or check your assignments and attendance."
     )
     return {
         "speech": speech,
-        "card": {"title": "CampusMate Assistant", "content": speech},
+        "card": {"title": "Alexa+ Assistant", "content": speech},
         "action_executed": "help",
         "mode": "deterministic_demo"
     }
